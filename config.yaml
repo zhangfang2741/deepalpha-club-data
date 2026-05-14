@@ -1,0 +1,45 @@
+sources:
+  fmp:
+    api_key: "${FMP_API_KEY}"
+    rate_limit: 0.5
+  fred:
+    pass
+  stocktwits:
+    poll_interval: 20
+  reddit:
+    poll_interval: 30
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topics:
+    news: "raw.news"
+    stocktwits: "raw.stocktwits"
+    sec_filings: "raw.sec_filings"
+    macro_events: "raw.macro_events"
+    processed_sentiment: "processed.sentiment"
+    dlq_failed: "dlq.failed"
+
+storage:
+  parquet_path: "warehouse/"
+  es_hosts:
+    - "localhost:9200"
+
+data_api:
+  host: "0.0.0.0"
+  port: 8000
+  token: "${DATA_API_TOKEN}"
+
+alerts:
+  channels:
+    slack: "#data-alerts"
+    email: "ops@deepalpha.com"
+  rules:
+    - name: "null_ratio_threshold"
+      condition: "null_ratio > 0.05"
+      severity: "warning"
+    - name: "price_anomaly"
+      condition: "abs(price_change) > 0.5"
+      severity: "critical"
+    - name: "data_delay"
+      condition: "last_update > 24h"
+      severity: "critical"
