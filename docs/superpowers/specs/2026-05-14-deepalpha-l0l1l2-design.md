@@ -188,7 +188,120 @@ class BaseProcessor(ABC):
 | Elasticsearch | financial_news | symbol, published_at |
 | Elasticsearch | social_sentiment | symbol, created_at |
 
-### 5.2 实时数据流 (Streaming)
+### 5.3 数据质量保障
+
+#### 5.3.1 校验规则体系
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          数据质量校验层                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  L0 Source    →    L1 Validation    →    L2 Cleaning    →    L3 Storage   │
+│                                                                             │
+│  ┌──────────┐      ┌───────────┐       ┌────────────┐      ┌──────────┐   │
+│  │ Schema   │      │ Null Check│       │ Anomaly    │      │ Sla Check│   │
+│  │ Check    │ ───▶ │ 5% 阈值   │ ────▶ │ Isolation  │ ────▶ │ 空值率   │   │
+│  └──────────┘      └───────────┘       └────────────┘      └──────────┘   │
+│        │                                         │               │        │
+│        ▼                                         ▼               ▼        │
+│  ┌──────────┐                            ┌────────────┐   ┌──────────┐    │
+│  │Type Check│                            │ PIT Valid  │   │ Alert    │    │
+│  │ 日期/数值│                            │ announce>  │   │ Slack/   │    │
+│  └──────────┘                            │ report     │   │ Email    │    │
+│                                          └────────────┘   └──────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5.3.2 校验规则明细
+
+**Price Cleaner 校验规则：**
+| 规则 | 阈值 | 处理方式 |
+|------|------|----------|
+| 去重 | 同 symbol+date | 取最新一条 |
+| 涨跌幅异常 | > 50% | 隔离到 `anomaly/` 分区 |
+| 成交量为零 | volume = 0 非交易日 | 剔除 |
+| 字段完整 | OHLCV 必填 | 缺失告警 |
+
+**Fundamental Cleaner 校验规则：**
+| 规则 | 阈值 | 处理方式 |
+|------|------|----------|
+| PIT 校正 | announce_date > report_date | 否则告警 |
+| 空值率 | > 5% | 触发告警 |
+| 负数检查 | 资产负债不能为负 | 标记异常 |
+| 报表一致性 | 三表关联校验 | 不一致告警 |
+
+**Sentiment Processor 校验规则：**
+| 规则 | 阈值 | 处理方式 |
+|------|------|----------|
+| FinBERT 置信度 | < 0.6 | 标记 low_confidence |
+| 文本长度 | > 10000 tokens | 截断 |
+| 重复检测 | 同 symbol+time 重复 | 去重 |
+
+#### 5.3.3 告警机制
+
+```python
+# 告警配置示例
+alerts:
+  channels:
+    - slack: "#data-alerts"
+    - email: "ops@deepalpha.com"
+
+  rules:
+    - name: "空值率超限"
+      condition: "null_ratio > 0.05"
+      severity: "warning"
+      channel: "slack"
+
+    - name: "涨跌幅异常"
+      condition: "abs(price_change) > 0.5"
+      severity: "critical"
+      channel: "slack+email"
+
+    - name: "数据延迟"
+      condition: "last_update > 24h"
+      severity: "critical"
+      channel: "slack"
+```
+
+#### 5.3.4 异常数据隔离
+
+```
+warehouse/
+├── price/
+│   ├── market=US/
+│   │   ├── date=2024-01-01/      # 正常数据
+│   │   └── _anomaly/             # 异常隔离区
+│   │       └── symbol=AAPL/      # 涨跌幅>50%的记录
+├── financials/
+│   └── _quality_issues/         # 空值率>5%的报告
+│       └── symbol=TSLA/
+└── macro/
+    └── _stale/                   # 过期数据隔离
+```
+
+#### 5.3.5 数据质量报告
+
+每日自动生成质量报告：
+
+```json
+{
+  "date": "2024-01-01",
+  "summary": {
+    "total_records": 125000,
+    "passed": 124500,
+    "anomaly_isolated": 320,
+    "quality_score": 0.997
+  },
+  "by_source": {
+    "fmp_price": { "records": 100, "anomalies": 2, "score": 0.98 },
+    "fmp_financials": { "records": 5000, "anomalies": 15, "score": 0.997 },
+    "stocktwits": { "records": 50000, "low_confidence": 500, "score": 0.99 }
+  }
+}
+```
+
+### 5.4 实时数据流 (Streaming)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -223,7 +336,7 @@ class BaseProcessor(ABC):
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 5.3 Kafka Topic 设计
+### 5.5 Kafka Topic 设计
 
 | Topic | 生产者 | 消费者 | 保留 |
 |-------|--------|--------|------|
