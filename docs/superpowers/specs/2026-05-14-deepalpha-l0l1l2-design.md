@@ -19,6 +19,12 @@ deepalpha/
 │   ├── sources/                 # L0 数据源插件
 │   ├── processors/              # L1/L2 处理插件
 │   └── api/                     # Data API Service 插件
+├── frontend/                    # 前端目录 (React)
+│   ├── admin/                   # 管理后台
+│   │   ├── config/              # 配置管理
+│   │   ├── users/               # 用户管理
+│   │   └── monitoring/          # 监控面板
+│   └── src/
 ├── tests/
 ├── docker/
 ├── pyproject.toml
@@ -102,23 +108,119 @@ class BaseProcessor(ABC):
 
 ## 5. 数据流设计
 
-### 5.1 批量数据流 (L0→L1→L2→L3)
+### 5.1 清洗工作流 (Batch Processing)
 
 ```
-[Sources] → [Airflow DAGs] → [Cleaners] → [Parquet/DuckDB]
-   ↓
-[Kafka Producers]
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    批量数据清洗流程                                       │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                         │
+│  ┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐               │
+│  │ FMP API  │───▶│ Airflow DAG │───▶│   L0 Raw    │───▶│  Price       │               │
+│  │ $15/月   │    │ daily_price │    │   Parquet   │    │  Cleaner     │               │
+│  └──────────┘    └──────────────┘    └─────────────┘    └──────┬───────┘               │
+│                                                                  │                       │
+│  ┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────▼───────┐               │
+│  │ FRED API │───▶│ Airflow DAG │───▶│   L0 Raw     │───▶│ Fundamental  │              │
+│  │ 免费      │    │ daily_fund  │    │   Parquet   │    │  Cleaner     │               │
+│  └──────────┘    └──────────────┘    └─────────────┘    └──────┬───────┘               │
+│                                                                  │                       │
+│  ┌──────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────▼───────┐               │
+│  │ FMP News │───▶│ Kafka Topic │───▶│ raw.news    │───▶│ Sentiment     │───▶ ES Index   │
+│  │          │    │ raw.news    │    │ (7天保留)   │    │ Processor     │   financial_   │
+│  └──────────┘    └──────────────┘    └─────────────┘    └───────────────┘   news         │
+│                                                                                         │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- FMP/FRED Loader: 每日 06:00 触发，推送数据到 Kafka 和清洗队列
-- Airflow DAGs: daily_price / daily_fundamental / daily_macro / daily_alternative
+**工作流步骤详解：**
 
-### 5.2 实时数据流 (L0→L1→L2→L3)
+#### Step 1: L0 数据抓取
+| 来源 | 触发方式 | 输出 |
+|------|----------|------|
+| FMP 行情 | Airflow daily_price DAG (06:00 EST) | Parquet → L0_raw/price/ |
+| FMP 财务 | Airflow daily_fundamental DAG (06:00 EST) | Parquet → L0_raw/financials/ |
+| FMP 新闻 | Kafka Producer → raw.news topic | Kafka Message |
+| FRED 宏观 | Airflow daily_macro DAG (06:00 EST) | Parquet → L0_raw/macro/ |
+
+#### Step 2: L1 数据接入
+| 组件 | 职责 | 配置 |
+|------|------|------|
+| Airflow | DAG 调度、重试、可视化 | LocalExecutor, 3次重试, 间隔5分钟 |
+| Kafka Producer | 实时数据推送 | FMP请求间隔0.5秒防限流 |
+
+#### Step 3: L2 数据清洗
+
+**Price Cleaner 清洗规则：**
+```
+输入: L0_raw/price/
+     ├── 去重: 同 symbol + date 取最新一条
+     ├── 异常检测: 单日涨跌幅 > 50% → 标记到 anomaly 分区
+     ├── 成交量过滤: volume = 0 的非交易日记录剔除
+     └── 输出: warehouse/price/ (按 market/date 分区)
+```
+
+**Fundamental Cleaner 清洗规则：**
+```
+输入: L0_raw/financials/
+     ├── PIT校正: 使用 announce_date (非 report_date)
+     ├── 有效性检查: announce_date > report_date
+     ├── 空值统计: 空值率 > 5% → 触发告警
+     └── 输出: warehouse/financials/ (按 market/symbol 分区)
+```
+
+**Sentiment Processor 处理规则：**
+```
+输入: raw.stocktwits / raw.news
+     ├── FinBERT 推理: sentiment_scores (positive/negative/neutral)
+     ├── 情绪打分: sentiment_score (-1 ~ 1)
+     ├── StockTwits特殊: 自带标签 + 用户粉丝权重 (log压缩)
+     └── 输出: ES Index (social_sentiment / financial_news)
+```
+
+#### Step 4: L3 数据存储
+| 存储 | 路径/Index | 分区键 |
+|------|------------|--------|
+| Parquet (行情) | warehouse/price/ | market, date |
+| Parquet (财务) | warehouse/financials/ | market, symbol |
+| Parquet (因子) | warehouse/factors/ | date |
+| Parquet (宏观) | warehouse/macro/ | series_id |
+| Elasticsearch | financial_news | symbol, published_at |
+| Elasticsearch | social_sentiment | symbol, created_at |
+
+### 5.2 实时数据流 (Streaming)
 
 ```
-[Crawlers] → [Kafka Producers] → [Faust Workers] → [ES]
-                              ↓
-                        [FinBERT NLP]
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                  实时数据流                                          │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  StockTwits API  ────▶  StockTwitsCrawler  ────▶  raw.stocktwits  ──────────────┐ │
+│  (20秒轮询)                                               (7天)                    │ │
+│                                                                     ▼             │
+│  Reddit API  ──────▶  RedditCrawler  ──────▶  raw.stocktwits  ──────────────┼───▶ │
+│  (30秒轮询)                                               (7天)                    │ │
+│                                                                     ▼             │
+│  SEC EDGAR  ──────▶  SECCrawler  ─────────▶  raw.sec_filings  ──────────┼───▶ │
+│  (事件驱动)                                                (30天)               │ │
+│                                                                     ▼             │
+│  Fed RSS  ───────▶  FedCrawler  ─────────▶  raw.macro_events  ────────┼───▶ │
+│  (事件驱动)                                                (30天)               │ │
+│                                                                     ▼             │
+│                                                        ┌─────────────────────────┤ │
+│                                                        │   Faust Workers         │ │
+│                                                        │   ├── SentimentProcessor│ │
+│                                                        │   │   └── FinBERT NLP    │ │
+│                                                        │   ├── TextParser        │ │
+│                                                        │   └── EventProcessor    │ │
+│                                                        └───────────┬─────────────┘ │
+│                                                                        ▼             │
+│                                                    processed.sentiment  ────▶ ES  │
+│                                                    (7天保留)                        │
+│                                                                        ▼             │
+│                                                               dlq.failed  ────▶ 人工 │
+│                                                               (30天保留)              │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 5.3 Kafka Topic 设计
@@ -157,7 +259,7 @@ storage:
   es_hosts: ["localhost:9200"]
 ```
 
-## 7. Docker 服务编排
+## 10. Docker 服务编排
 
 | 服务 | 端口 | 内存 |
 |------|------|------|
@@ -170,7 +272,59 @@ storage:
 | Data API | 8000 | ~300MB |
 | Faust Worker | 本地 | ~1.5GB |
 
-## 8. 技术选型理由
+## 8. 前端 - 管理后台
+
+### 8.1 定位
+
+管理后台用于配置数据源参数、用户管理、监控数据流状态。后续可扩展至因子编辑器和回测展示。
+
+### 8.2 技术栈
+
+| 组件 | 选型 |
+|------|------|
+| 框架 | React 18 + TypeScript |
+| 状态管理 | Zustand |
+| UI 库 | TailwindCSS + shadcn/ui |
+| 构建工具 | Vite |
+| API 调用 | React Query |
+
+### 8.3 目录结构
+
+```
+frontend/admin/
+├── src/
+│   ├── components/          # 通用组件
+│   │   ├── ui/              # shadcn/ui 组件
+│   │   └── layout/           # 布局组件
+│   ├── pages/
+│   │   ├── Config/           # 配置管理页面
+│   │   ├── Users/            # 用户管理页面
+│   │   └── Monitoring/        # 监控面板
+│   ├── hooks/                # 自定义 hooks
+│   ├── api/                  # API 调用封装
+│   └── stores/               # Zustand stores
+├── public/
+├── package.json
+└── vite.config.ts
+```
+
+### 8.4 管理后台功能
+
+| 页面 | 功能 |
+|------|------|
+| 配置管理 | 数据源 API Key 配置、Kafka Topic 配置、轮询间隔配置 |
+| 用户管理 | 用户 CRUD、租户空间分配 |
+| 监控面板 | Kafka Lag、ES 写入量、数据更新状态 |
+
+### 8.5 配置管理页面设计
+
+配置项通过前端编辑后，持久化到 `config.yaml` 或数据库，支持：
+- FMP API Key 管理
+- 爬虫轮询间隔调整
+- Kafka Topic 配置
+- ES Index 管理
+
+## 11. 技术选型理由
 
 | 组件 | 选型 | 原因 |
 |------|------|------|
@@ -181,7 +335,7 @@ storage:
 | 非结构化存储 | Elasticsearch | 全文检索，实时写入 |
 | API 框架 | FastAPI | 异步高性能，自动生成 OpenAPI |
 
-## 9. 实施计划
+## 12. 实施计划
 
 Phase 1: 框架搭建
 - 创建目录结构和 pyproject.toml
@@ -199,7 +353,13 @@ Phase 3: L1/L2 处理
 - 实现 cleaners
 - 实现 Faust workers + FinBERT
 
-## 10. 设计决策
+Phase 4: 前端管理后台
+- 创建 React 项目结构
+- 实现配置管理页面
+- 实现用户管理页面
+- 实现监控面板
+
+## 13. 设计决策
 
 | 决策点 | 选择 | 放弃方案 |
 |--------|------|----------|
