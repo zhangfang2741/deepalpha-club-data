@@ -372,7 +372,105 @@ storage:
   es_hosts: ["localhost:9200"]
 ```
 
-## 10. Docker 服务编排
+## 7. Data API Service
+
+### 7.1 定位
+
+Data API Service 是 Mac mini 对外的统一数据查询接口，为 DeepAlpha 云端提供 L3 存储数据的查询能力。
+
+### 7.2 端点设计
+
+```
+http://localhost:8000/v1/
+```
+
+| 方法 | 端点 | 说明 | 返回格式 |
+|------|------|------|----------|
+| GET | `/v1/price` | 行情数据查询 | Arrow IPC / JSON |
+| GET | `/v1/financials` | 财务数据查询 | Arrow IPC / JSON |
+| GET | `/v1/sentiment` | 情绪数据查询 | JSON |
+| GET | `/v1/macro` | 宏观数据查询 | Arrow IPC / JSON |
+| GET | `/v1/universe` | 标的列表查询 | JSON |
+
+### 7.3 查询接口详解
+
+#### GET /v1/price 行情查询
+
+```http
+GET /v1/price?symbols=AAPL,TSLA&start_date=2024-01-01&end_date=2024-12-31&fields=open,high,low,close,volume
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| symbols | string | 是 | 逗号分隔的股票代码 |
+| start_date | date | 是 | 开始日期 YYYY-MM-DD |
+| end_date | date | 是 | 结束日期 YYYY-MM-DD |
+| fields | string | 否 | 返回字段，默认全部 |
+| format | string | 否 | `arrow` 或 `json`，默认 `arrow` |
+
+**响应 (Arrow IPC):**
+```text
+date       | symbol | open   | high   | low    | close  | volume
+2024-01-02 | AAPL   | 185.50 | 186.20 | 184.80 | 185.90 | 50000000
+2024-01-02 | TSLA   | 248.00 | 252.50 | 247.20 | 251.00 | 80000000
+```
+
+#### GET /v1/financials 财务查询
+
+```http
+GET /v1/financials?symbols=AAPL,TSLA&as_of_date=2024-03-31&fields=revenue,net_income,eps
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| symbols | string | 是 | 逗号分隔的股票代码 |
+| as_of_date | date | 是 | 报表日期 (PIT 校正) |
+| fields | string | 否 | 返回字段 |
+
+#### GET /v1/sentiment 情绪查询
+
+```http
+GET /v1/sentiment?symbols=AAPL&data_type=stocktwits&start_date=2024-01-01&end_date=2024-12-31
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| symbols | string | 是 | 逗号分隔的股票代码 |
+| data_type | string | 否 | `stocktwits` / `news` / `all` |
+| start_date | date | 否 | 开始日期 |
+| end_date | date | 否 | 结束日期 |
+
+#### GET /v1/universe 标的列表
+
+```http
+GET /v1/universe?market=US
+```
+
+**响应:**
+```json
+{
+  "market": "US",
+  "symbols": ["AAPL", "TSLA", "MSFT", ...],
+  "count": 100,
+  "last_updated": "2024-01-02"
+}
+```
+
+### 7.4 认证
+
+```http
+X-API-Token: <your-token>
+```
+
+当前使用固定 Token，后续升级为 JWT。
+
+### 7.5 网络穿透
+
+```
+Mac mini (:8000) → frpc → 云服务器 (:18000) → DeepAlpha
+```
+
+## 8. Docker 服务编排
 
 | 服务 | 端口 | 内存 |
 |------|------|------|
@@ -385,7 +483,7 @@ storage:
 | Data API | 8000 | ~300MB |
 | Faust Worker | 本地 | ~1.5GB |
 
-## 8. 前端 - 管理后台
+## 9. 前端 - 管理后台
 
 ### 8.1 定位
 
@@ -484,7 +582,7 @@ Faust Stream Monitor
 └── Kafka Lag 趋势图
 ```
 
-## 11. 技术选型理由
+## 10. 技术选型理由
 
 | 组件 | 选型 | 原因 |
 |------|------|------|
@@ -495,7 +593,7 @@ Faust Stream Monitor
 | 非结构化存储 | Elasticsearch | 全文检索，实时写入 |
 | API 框架 | FastAPI | 异步高性能，自动生成 OpenAPI |
 
-## 12. 实施计划
+## 11. 实施计划
 
 Phase 1: 框架搭建
 - 创建目录结构和 pyproject.toml
@@ -519,7 +617,7 @@ Phase 4: 前端管理后台
 - 实现用户管理页面
 - 实现监控面板
 
-## 13. 设计决策
+## 12. 设计决策
 
 | 决策点 | 选择 | 放弃方案 |
 |--------|------|----------|
