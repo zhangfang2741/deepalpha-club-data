@@ -1,0 +1,2 @@
+MATCH (A:uid_29d503faabe74ea4a6a0cba9430828ac WHERE A.id = -43691532138522595149) -[e1:fund_paybyaccount_aml_tukun_nearline_uid2uid_29d503faabe74ea4a6a0cba9430828ac WHERE e1.gdb_timestamp >= 1762842112168 AND e1.gdb_timestamp <= 1763014912168 AND e1.amt >= 990 AND (e1.event_name = 'payByAccount' OR e1.event_name = 'enterpriseTransfer') AND (e1.event_name = 'payByAccount' OR e1.event_name = 'enterpriseTransfer') PER_NODE_LIMIT(100)]-> (B:uid_29d503faabe74ea4a6a0cba9430828ac) 
+return e1
