@@ -5,8 +5,11 @@ import polars as pl
 
 
 class BaseProcessor(ABC):
-    name: str
     version: str = "1.0.0"
+
+    @property
+    @abstractmethod
+    def name(self) -> str: ...
 
     @abstractmethod
     def process(self, df: pl.DataFrame, **kwargs: Any) -> pl.DataFrame: ...

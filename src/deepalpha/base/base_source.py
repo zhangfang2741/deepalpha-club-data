@@ -5,8 +5,11 @@ import polars as pl
 
 
 class BaseSource(ABC):
-    name: str
     version: str = "1.0.0"
+
+    @property
+    @abstractmethod
+    def name(self) -> str: ...
 
     @abstractmethod
     def fetch(self, **kwargs: Any) -> pl.DataFrame: ...
@@ -17,7 +20,24 @@ class BaseSource(ABC):
     def to_kafka(self, df: pl.DataFrame, topic: str, bootstrap_servers: str = "localhost:9092") -> None:
         from confluent_kafka import Producer
         import json
+
+        errors: list[str] = []
+
+        def _on_delivery(err, msg):
+            if err:
+                errors.append(str(err))
+
         producer = Producer({"bootstrap.servers": bootstrap_servers})
-        for row in df.iter_rows(named=True):
-            producer.produce(topic, key=row.get("symbol", "").encode(), value=json.dumps(row).encode())
-        producer.flush()
+        try:
+            for row in df.iter_rows(named=True):
+                producer.produce(
+                    topic,
+                    key=str(row.get("symbol") or "").encode(),
+                    value=json.dumps(row, default=str).encode(),
+                    on_delivery=_on_delivery,
+                )
+        finally:
+            producer.flush()
+
+        if errors:
+            raise RuntimeError(f"Kafka delivery failed for {len(errors)} row(s): {errors[:3]}")
