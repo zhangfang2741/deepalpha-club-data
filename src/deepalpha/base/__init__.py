@@ -1,5 +1,5 @@
-"""Base classes for DeepAlpha plugins"""
-from deepalpha.base.source import BaseSource
-from deepalpha.base.processor import BaseProcessor
+# src/deepalpha/base/__init__.py
+from deepalpha.base.base_source import BaseSource
+from deepalpha.base.base_processor import BaseProcessor
 
 __all__ = ["BaseSource", "BaseProcessor"]
