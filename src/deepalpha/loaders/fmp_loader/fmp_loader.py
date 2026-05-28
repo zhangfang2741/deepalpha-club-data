@@ -8,10 +8,10 @@ from typing import Any, Optional
 import httpx
 import polars as pl
 
-logger = logging.getLogger(__name__)
-
 from deepalpha.base.base_source import BaseSource
 from deepalpha.loaders.fmp_loader.fmp_config import FMPConfig
+
+logger = logging.getLogger(__name__)
 
 
 class FMPLoader(BaseSource):

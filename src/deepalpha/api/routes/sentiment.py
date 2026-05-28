@@ -1,5 +1,5 @@
 """Sentiment data endpoint"""
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query
 from typing import Optional
 
 router = APIRouter()
@@ -11,7 +11,6 @@ async def get_sentiment(
     data_type: str = Query("all"),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    x_api_token: str = Header(...),
 ):
     """Query sentiment data from Elasticsearch"""
     return {"message": "Not implemented"}

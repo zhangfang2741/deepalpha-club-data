@@ -128,7 +128,6 @@ services:
     environment:
       - CONFIG_PATH=/app/config.yaml
       - FMP_API_KEY=${FMP_API_KEY}
-      - DATA_API_TOKEN=${DATA_API_TOKEN:-default-token}
     volumes:
       - ../config.yaml:/app/config.yaml:ro
       - ../warehouse:/app/warehouse

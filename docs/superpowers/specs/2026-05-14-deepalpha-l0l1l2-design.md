@@ -456,15 +456,7 @@ GET /v1/universe?market=US
 }
 ```
 
-### 7.4 认证
-
-```http
-X-API-Token: <your-token>
-```
-
-当前使用固定 Token，后续升级为 JWT。
-
-### 7.5 网络穿透
+### 7.4 网络穿透
 
 ```
 Mac mini (:8000) → frpc → 云服务器 (:18000) → DeepAlpha

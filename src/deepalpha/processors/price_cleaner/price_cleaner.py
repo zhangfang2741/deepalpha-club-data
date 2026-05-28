@@ -3,7 +3,6 @@
 import polars as pl
 
 from deepalpha.base.base_processor import BaseProcessor
-from deepalpha.models.price_model import PRICE_BAR_SCHEMA
 from deepalpha.processors.price_cleaner.price_schema import CLEANED_PRICE_SCHEMA
 
 

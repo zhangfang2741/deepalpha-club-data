@@ -396,7 +396,7 @@ class YFinanceLoader(BaseSource):
         size: int,
         offset: int,
     ) -> pl.DataFrame:
-        from yfinance import EquityQuery, screen
+        from yfinance import screen
         q = self._dict_to_equity_query(query_dict)
         results = screen(q, sortField=sort_field, sortAsc=sort_asc, offset=offset, size=size)
         quotes = results.get("quotes", [])

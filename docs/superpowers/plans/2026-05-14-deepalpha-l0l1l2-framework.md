@@ -409,7 +409,6 @@ storage:
 data_api:
   host: "0.0.0.0"
   port: 8000
-  token: "${DATA_API_TOKEN}"
 
 alerts:
   channels:
@@ -477,7 +476,6 @@ class DataAPIConfig(BaseModel):
 
     host: str = "0.0.0.0"
     port: int = 8000
-    token: str = ""
 
 
 class AlertRule(BaseModel):
@@ -587,7 +585,6 @@ storage:
 data_api:
   host: "0.0.0.0"
   port: 8000
-  token: "secret"
 
 alerts:
   channels:
@@ -774,7 +771,6 @@ services:
     environment:
       - CONFIG_PATH=/app/config.yaml
       - FMP_API_KEY=${FMP_API_KEY}
-      - DATA_API_TOKEN=${DATA_API_TOKEN:-default-token}
     volumes:
       - ../config.yaml:/app/config.yaml:ro
       - ../warehouse:/app/warehouse
@@ -825,9 +821,6 @@ volumes:
 
 # FMP API Key (https://site.financialmodelingprep.com/)
 FMP_API_KEY=your-fmp-api-key-here
-
-# Data API Authentication Token
-DATA_API_TOKEN=your-data-api-token-here
 
 # Optional: Slack webhook for alerts
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/XXX/YYY/ZZZ
@@ -1478,18 +1471,12 @@ class PriceResponse(BaseModel):
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Header, Query
+from fastapi import APIRouter, HTTPException, Query
 import polars as pl
 
 from deepalpha.api.schemas import PriceResponse
 
 router = APIRouter()
-
-
-def verify_token(x_api_token: str = Header(...)) -> str:
-    """Verify API token"""
-    # TODO: Load from config and validate
-    return x_api_token
 
 
 @router.get("/price")
@@ -1499,14 +1486,11 @@ async def get_price(
     end_date: date = Query(..., description="End date"),
     fields: Optional[str] = Query(None, description="Fields to return"),
     format: str = Query("arrow", description="Response format"),
-    x_api_token: str = Header(...),
 ) -> PriceResponse:
     """Query historical price data.
 
     Returns Arrow IPC by default for performance (10x faster than JSON).
     """
-    verify_token(x_api_token)
-
     # TODO: Load from warehouse parquet
     # This is a placeholder returning empty data
     df = pl.DataFrame({
@@ -1528,7 +1512,7 @@ async def get_price(
 
 ```python
 """Financial data endpoint"""
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query
 from typing import Optional
 
 router = APIRouter()
@@ -1539,7 +1523,6 @@ async def get_financials(
     symbols: str = Query(...),
     as_of_date: str = Query(...),
     fields: Optional[str] = Query(None),
-    x_api_token: str = Header(...),
 ):
     """Query financial data with PIT correction"""
     # TODO: Implement
@@ -1548,7 +1531,7 @@ async def get_financials(
 
 ```python
 """Sentiment data endpoint"""
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query
 from typing import Optional
 
 router = APIRouter()
@@ -1560,7 +1543,6 @@ async def get_sentiment(
     data_type: str = Query("all"),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    x_api_token: str = Header(...),
 ):
     """Query sentiment data from Elasticsearch"""
     # TODO: Implement
@@ -1569,7 +1551,7 @@ async def get_sentiment(
 
 ```python
 """Universe endpoint"""
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query
 
 router = APIRouter()
 
@@ -1577,7 +1559,6 @@ router = APIRouter()
 @router.get("/universe")
 async def get_universe(
     market: str = Query("US"),
-    x_api_token: str = Header(...),
 ):
     """Get list of available symbols"""
     # TODO: Load from metadata
@@ -1613,18 +1594,6 @@ class TestHealthEndpoint:
 class TestPriceEndpoint:
     """Test /v1/price endpoint"""
 
-    def test_requires_auth(self):
-        """Price endpoint requires X-API-Token header"""
-        response = client.get(
-            "/v1/price",
-            params={
-                "symbols": "AAPL",
-                "start_date": "2024-01-01",
-                "end_date": "2024-12-31",
-            },
-        )
-        assert response.status_code == 422  # Missing header
-
     def test_price_query_params(self):
         """Price endpoint validates query parameters"""
         response = client.get(
@@ -1634,7 +1603,6 @@ class TestPriceEndpoint:
                 "start_date": "2024-01-01",
                 "end_date": "2024-12-31",
             },
-            headers={"X-API-Token": "test-token"},
         )
         # TODO: Will return 501 when not implemented
         assert response.status_code in [200, 501]
@@ -1648,7 +1616,6 @@ class TestUniverseEndpoint:
         response = client.get(
             "/v1/universe",
             params={"market": "US"},
-            headers={"X-API-Token": "test-token"},
         )
         # TODO: Will return 501 when not implemented
         assert response.status_code in [200, 501]
@@ -1667,7 +1634,6 @@ git add src/deepalpha/api/ tests/unit/api/
 git commit -m "feat: add Data API Service skeleton
 
 - FastAPI app with /v1/price, /v1/financials, /v1/sentiment, /v1/universe
-- X-API-Token authentication
 - Arrow IPC response format support
 - Health check endpoint
 

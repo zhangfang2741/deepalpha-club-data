@@ -54,7 +54,6 @@ storage:
 data_api:
   host: "0.0.0.0"
   port: 8000
-  token: "secret"
 
 alerts:
   channels:

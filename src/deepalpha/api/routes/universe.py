@@ -1,5 +1,5 @@
 """Universe endpoint"""
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query
 
 router = APIRouter()
 
@@ -7,7 +7,6 @@ router = APIRouter()
 @router.get("/universe")
 async def get_universe(
     market: str = Query("US"),
-    x_api_token: str = Header(...),
 ):
     """Get list of available symbols"""
     return {

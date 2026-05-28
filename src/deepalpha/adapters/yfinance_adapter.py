@@ -14,7 +14,7 @@ from deepalpha.models.analysis_model import (
 from deepalpha.models.holdings_model import INSTITUTIONAL_HOLDER_SCHEMA, INSIDER_TRANSACTION_SCHEMA
 from deepalpha.models.etf_model import FUND_OVERVIEW_SCHEMA, FUND_HOLDINGS_SCHEMA, SECTOR_WEIGHTS_SCHEMA
 from deepalpha.models.sector_model import SECTOR_OVERVIEW_SCHEMA, INDUSTRY_OVERVIEW_SCHEMA
-from deepalpha.models.calendar_model import EARNINGS_CALENDAR_SCHEMA, MARKET_STATUS_SCHEMA
+from deepalpha.models.calendar_model import EARNINGS_CALENDAR_SCHEMA
 from deepalpha.models.news_model import NEWS_ITEM_SCHEMA
 from deepalpha.models.universe_model import SCREEN_RESULT_SCHEMA
 
