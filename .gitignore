@@ -11,7 +11,11 @@ ENV/
 
 # IDE
 .idea/
+*.iml
+*.ipr
+*.iws
 .vscode/
+*.code-workspace
 *.swp
 .DS_Store
 
