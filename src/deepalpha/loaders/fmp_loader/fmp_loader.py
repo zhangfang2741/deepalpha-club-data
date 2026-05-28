@@ -1,11 +1,14 @@
 # src/deepalpha/loaders/fmp_loader/fmp_loader.py
 """FMP data loader — returns raw API responses without field mapping."""
+import logging
 import time
 from datetime import date
 from typing import Any, Optional
 
 import httpx
 import polars as pl
+
+logger = logging.getLogger(__name__)
 
 from deepalpha.base.base_source import BaseSource
 from deepalpha.loaders.fmp_loader.fmp_config import FMPConfig
@@ -67,7 +70,7 @@ class FMPLoader(BaseSource):
                         results.append(row)
                 time.sleep(self.config.rate_limit)
             except Exception as e:
-                print(f"Error fetching {symbol}: {e}")
+                logger.warning("Error fetching %s: %s", symbol, e)
                 continue
 
         if not results:
