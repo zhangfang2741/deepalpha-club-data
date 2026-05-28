@@ -1,0 +1,24 @@
+# src/deepalpha/models/__init__.py
+"""Canonical pl.Schema definitions for the deepalpha data model."""
+from deepalpha.models.price_model import PRICE_BAR_SCHEMA, DIVIDENDS_SCHEMA, SPLITS_SCHEMA, TICK_SCHEMA
+from deepalpha.models.company_model import FAST_INFO_SCHEMA, COMPANY_INFO_SCHEMA
+from deepalpha.models.financials_model import INCOME_STMT_SCHEMA, BALANCE_SHEET_SCHEMA, CASH_FLOW_SCHEMA
+from deepalpha.models.analysis_model import ANALYST_RATING_SCHEMA, PRICE_TARGET_SCHEMA, EARNINGS_ESTIMATE_SCHEMA, ESG_SCHEMA
+from deepalpha.models.holdings_model import INSTITUTIONAL_HOLDER_SCHEMA, INSIDER_TRANSACTION_SCHEMA
+from deepalpha.models.etf_model import FUND_OVERVIEW_SCHEMA, FUND_HOLDINGS_SCHEMA, SECTOR_WEIGHTS_SCHEMA
+from deepalpha.models.sector_model import SECTOR_OVERVIEW_SCHEMA, INDUSTRY_OVERVIEW_SCHEMA
+from deepalpha.models.calendar_model import EARNINGS_CALENDAR_SCHEMA, MARKET_STATUS_SCHEMA
+from deepalpha.models.news_model import NEWS_ITEM_SCHEMA
+from deepalpha.models.universe_model import SCREEN_RESULT_SCHEMA
+
+__all__ = [
+    "PRICE_BAR_SCHEMA", "DIVIDENDS_SCHEMA", "SPLITS_SCHEMA", "TICK_SCHEMA",
+    "FAST_INFO_SCHEMA", "COMPANY_INFO_SCHEMA",
+    "INCOME_STMT_SCHEMA", "BALANCE_SHEET_SCHEMA", "CASH_FLOW_SCHEMA",
+    "ANALYST_RATING_SCHEMA", "PRICE_TARGET_SCHEMA", "EARNINGS_ESTIMATE_SCHEMA", "ESG_SCHEMA",
+    "INSTITUTIONAL_HOLDER_SCHEMA", "INSIDER_TRANSACTION_SCHEMA",
+    "FUND_OVERVIEW_SCHEMA", "FUND_HOLDINGS_SCHEMA", "SECTOR_WEIGHTS_SCHEMA",
+    "SECTOR_OVERVIEW_SCHEMA", "INDUSTRY_OVERVIEW_SCHEMA",
+    "EARNINGS_CALENDAR_SCHEMA", "MARKET_STATUS_SCHEMA",
+    "NEWS_ITEM_SCHEMA", "SCREEN_RESULT_SCHEMA",
+]
