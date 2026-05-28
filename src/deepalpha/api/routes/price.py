@@ -2,17 +2,12 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query
 import polars as pl
 
-from deepalpha.api.schemas import PriceResponse
+from deepalpha.api.api_schemas import PriceResponse
 
 router = APIRouter()
-
-
-def verify_token(x_api_token: str = Header(...)) -> str:
-    """Verify API token"""
-    return x_api_token
 
 
 @router.get("/price")
@@ -22,11 +17,8 @@ async def get_price(
     end_date: date = Query(..., description="End date"),
     fields: Optional[str] = Query(None, description="Fields to return"),
     format: str = Query("arrow", description="Response format"),
-    x_api_token: str = Header(...),
 ) -> PriceResponse:
     """Query historical price data."""
-    verify_token(x_api_token)
-
     df = pl.DataFrame({
         "date": [start_date],
         "symbol": ["AAPL"],
