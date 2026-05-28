@@ -29,6 +29,9 @@ dist/
 build/
 *.egg-info/
 
+# Claude Code
+.claude/settings.json
+
 # Node
 node_modules/
 npm-debug.log*
