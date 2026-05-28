@@ -68,37 +68,41 @@ The reference design is inspired by the yfinance API structure (`docs/temp/yfina
 
 ```text
 src/deepalpha/
-├── models/                    ← NEW
-│   ├── __init__.py            # re-exports all schemas
-│   ├── price.py               # PRICE_BAR_SCHEMA, DIVIDENDS_SCHEMA, SPLITS_SCHEMA, TICK_SCHEMA
-│   ├── company.py             # FAST_INFO_SCHEMA, COMPANY_INFO_SCHEMA
-│   ├── financials.py          # INCOME_STMT_SCHEMA, BALANCE_SHEET_SCHEMA, CASH_FLOW_SCHEMA
-│   ├── analysis.py            # ANALYST_RATING_SCHEMA, PRICE_TARGET_SCHEMA, EARNINGS_ESTIMATE_SCHEMA, ESG_SCHEMA
-│   ├── holdings.py            # INSTITUTIONAL_HOLDER_SCHEMA, INSIDER_TRANSACTION_SCHEMA
-│   ├── etf.py                 # FUND_OVERVIEW_SCHEMA, FUND_HOLDINGS_SCHEMA, SECTOR_WEIGHTS_SCHEMA
-│   ├── sector.py              # SECTOR_OVERVIEW_SCHEMA, INDUSTRY_OVERVIEW_SCHEMA
-│   ├── calendar.py            # EARNINGS_CALENDAR_SCHEMA, MARKET_STATUS_SCHEMA
-│   ├── news.py                # NEWS_ITEM_SCHEMA
-│   └── universe.py            # SCREEN_RESULT_SCHEMA
-├── adapters/                  ← NEW
+├── models/                         ← NEW
+│   ├── __init__.py                 # re-exports all schemas
+│   ├── price_model.py              # PRICE_BAR_SCHEMA, DIVIDENDS_SCHEMA, SPLITS_SCHEMA, TICK_SCHEMA
+│   ├── company_model.py            # FAST_INFO_SCHEMA, COMPANY_INFO_SCHEMA
+│   ├── financials_model.py         # INCOME_STMT_SCHEMA, BALANCE_SHEET_SCHEMA, CASH_FLOW_SCHEMA
+│   ├── analysis_model.py           # ANALYST_RATING_SCHEMA, PRICE_TARGET_SCHEMA, EARNINGS_ESTIMATE_SCHEMA, ESG_SCHEMA
+│   ├── holdings_model.py           # INSTITUTIONAL_HOLDER_SCHEMA, INSIDER_TRANSACTION_SCHEMA
+│   ├── etf_model.py                # FUND_OVERVIEW_SCHEMA, FUND_HOLDINGS_SCHEMA, SECTOR_WEIGHTS_SCHEMA
+│   ├── sector_model.py             # SECTOR_OVERVIEW_SCHEMA, INDUSTRY_OVERVIEW_SCHEMA
+│   ├── calendar_model.py           # EARNINGS_CALENDAR_SCHEMA, MARKET_STATUS_SCHEMA
+│   ├── news_model.py               # NEWS_ITEM_SCHEMA
+│   └── universe_model.py           # SCREEN_RESULT_SCHEMA
+├── adapters/                       ← NEW
 │   ├── __init__.py
-│   ├── base.py                # BaseAdapter ABC
-│   ├── fmp.py                 # FMPAdapter
-│   └── yfinance.py            # YFinanceAdapter
-├── sources/
+│   ├── base_adapter.py             # BaseAdapter base class
+│   ├── fmp_adapter.py              # FMPAdapter
+│   └── yfinance_adapter.py         # YFinanceAdapter
+├── loaders/                        ← NEW (replaces sources/)
 │   ├── fmp_loader/
-│   │   ├── loader.py          # MODIFIED: remove rename/select from _fetch_price
-│   │   ├── config.py          # unchanged
-│   │   └── schemas.py         # DEPRECATED: will be removed after migration
-│   └── yfinance_loader/       ← NEW
+│   │   ├── __init__.py
+│   │   ├── fmp_loader.py           # FMPLoader — returns raw df, no field mapping
+│   │   └── fmp_config.py           # FMPConfig
+│   └── yfinance_loader/            ← NEW
 │       ├── __init__.py
-│       ├── loader.py          # YFinanceLoader
-│       └── config.py          # YFinanceConfig
+│       ├── yfinance_loader.py      # YFinanceLoader
+│       └── yfinance_config.py      # YFinanceConfig
+├── base/
+│   ├── base_source.py              # BaseSource ABC
+│   └── base_processor.py           # BaseProcessor ABC
 ├── processors/
 │   └── price_cleaner/
-│       └── schemas.py         # MODIFIED: import from models/price.py
+│       ├── price_cleaner.py        # PriceCleaner
+│       └── price_schema.py         # CLEANED_PRICE_SCHEMA (extends PRICE_BAR_SCHEMA)
 └── api/
-    └── schemas.py             # unchanged structure; field names reference models/
+    └── api_schemas.py              # Pydantic API schemas; field names reference models/
 ```
 
 ---
@@ -107,10 +111,12 @@ src/deepalpha/
 
 All schemas include `symbol: pl.String` and `fetched_at: pl.Datetime` as universal fields.
 
-### `models/price.py`
+### `models/price_model.py`
 
 ```python
 import polars as pl
+
+_UTC = pl.Datetime("us", time_zone="UTC")
 
 PRICE_BAR_SCHEMA = pl.Schema({
     "symbol":      pl.String,
@@ -121,31 +127,31 @@ PRICE_BAR_SCHEMA = pl.Schema({
     "close":       pl.Float64,
     "volume":      pl.Int64,
     "adj_close":   pl.Float64,
-    "dividends":   pl.Float64,
-    "splits":      pl.Float64,
+    "dividends":   pl.Float64,   # always 0.0 from FMP (separate endpoint); inline from yfinance
+    "splits":      pl.Float64,   # always 0.0 from FMP (separate endpoint); inline from yfinance
     "repaired":    pl.Boolean,
-    "fetched_at":  pl.Datetime,
+    "fetched_at":  _UTC,
 })
 
 DIVIDENDS_SCHEMA = pl.Schema({
     "symbol":     pl.String,
     "date":       pl.Date,
     "amount":     pl.Float64,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 
 SPLITS_SCHEMA = pl.Schema({
     "symbol":     pl.String,
     "date":       pl.Date,
     "ratio":      pl.Float64,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 
 TICK_SCHEMA = pl.Schema({
-    "symbol":    pl.String,
-    "price":     pl.Float64,
-    "volume":    pl.Int64,
-    "tick_at":   pl.Datetime,
+    "symbol":  pl.String,
+    "price":   pl.Float64,
+    "volume":  pl.Int64,
+    "tick_at": _UTC,
 })
 ```
 
@@ -155,7 +161,7 @@ TICK_SCHEMA = pl.Schema({
 
 ---
 
-### `models/company.py`
+### `models/company_model.py`
 
 ```python
 FAST_INFO_SCHEMA = pl.Schema({
@@ -192,7 +198,7 @@ COMPANY_INFO_SCHEMA = pl.Schema({
 
 ---
 
-### `models/financials.py`
+### `models/financials_model.py`
 
 Financial statements use tidy format (one row per reporting period) rather than yfinance's wide format (rows = metrics). The `freq` column distinguishes `"annual"`, `"quarterly"`, and `"ttm"`.
 
@@ -238,7 +244,7 @@ CASH_FLOW_SCHEMA = pl.Schema({
 
 ---
 
-### `models/analysis.py`
+### `models/analysis_model.py`
 
 ```python
 ANALYST_RATING_SCHEMA = pl.Schema({
@@ -248,7 +254,7 @@ ANALYST_RATING_SCHEMA = pl.Schema({
     "to_grade":   pl.String,
     "from_grade": pl.String,
     "action":     pl.String,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 
 PRICE_TARGET_SCHEMA = pl.Schema({
@@ -286,7 +292,7 @@ ESG_SCHEMA = pl.Schema({
 
 ---
 
-### `models/holdings.py`
+### `models/holdings_model.py`
 
 ```python
 INSTITUTIONAL_HOLDER_SCHEMA = pl.Schema({
@@ -306,13 +312,13 @@ INSIDER_TRANSACTION_SCHEMA = pl.Schema({
     "value":       pl.Float64,
     "transaction": pl.String,
     "date":        pl.Date,
-    "fetched_at":  pl.Datetime,
+    "fetched_at":  _UTC,
 })
 ```
 
 ---
 
-### `models/etf.py`
+### `models/etf_model.py`
 
 ```python
 FUND_OVERVIEW_SCHEMA = pl.Schema({
@@ -339,13 +345,13 @@ SECTOR_WEIGHTS_SCHEMA = pl.Schema({
     "symbol":     pl.String,
     "sector":     pl.String,
     "weight":     pl.Float64,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 ```
 
 ---
 
-### `models/sector.py`
+### `models/sector_model.py`
 
 ```python
 SECTOR_OVERVIEW_SCHEMA = pl.Schema({
@@ -354,20 +360,20 @@ SECTOR_OVERVIEW_SCHEMA = pl.Schema({
     "etf_symbol": pl.String,
     "market_cap": pl.Float64,
     "ytd_return": pl.Float64,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 
 INDUSTRY_OVERVIEW_SCHEMA = pl.Schema({
     "key":        pl.String,
     "name":       pl.String,
     "sector_key": pl.String,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 ```
 
 ---
 
-### `models/calendar.py`
+### `models/calendar_model.py`
 
 ```python
 EARNINGS_CALENDAR_SCHEMA = pl.Schema({
@@ -384,13 +390,13 @@ MARKET_STATUS_SCHEMA = pl.Schema({
     "market":     pl.String,
     "status":     pl.String,   # "open" | "closed" | "pre" | "post"
     "timezone":   pl.String,
-    "fetched_at": pl.Datetime,
+    "fetched_at": _UTC,
 })
 ```
 
 ---
 
-### `models/news.py`
+### `models/news_model.py`
 
 ```python
 NEWS_ITEM_SCHEMA = pl.Schema({
@@ -406,7 +412,7 @@ NEWS_ITEM_SCHEMA = pl.Schema({
 
 ---
 
-### `models/universe.py`
+### `models/universe_model.py`
 
 ```python
 SCREEN_RESULT_SCHEMA = pl.Schema({
@@ -424,17 +430,17 @@ SCREEN_RESULT_SCHEMA = pl.Schema({
 
 ## Adapters
 
-### `adapters/base.py` — BaseAdapter ABC
+### `adapters/base_adapter.py` — BaseAdapter
 
 ```python
-from abc import ABC
 import polars as pl
 
-class BaseAdapter(ABC):
+class BaseAdapter:
     """Transforms raw source DataFrame into canonical model schema.
 
-    Each source implements one adapter. Methods not relevant to the source
-    raise NotImplementedError by default (inherited from ABC).
+    Each source implements one adapter. Only implement the methods
+    supported by your source; unimplemented methods raise NotImplementedError
+    at call time. Do NOT inherit from ABC — partial implementation is intentional.
     """
     source_name: str
 
@@ -515,15 +521,15 @@ This drops extra columns and enforces types, guaranteeing the output strictly ma
 
 ---
 
-### `adapters/fmp.py` — FMPAdapter
+### `adapters/fmp_adapter.py` — FMPAdapter
 
 FMPAdapter implements price and financials (the only real endpoints in FMPLoader today). Fields absent from FMP's price response (`dividends`, `splits`, `repaired`) are filled with defaults.
 
 ```python
 from datetime import datetime, timezone
 import polars as pl
-from deepalpha.adapters.base import BaseAdapter
-from deepalpha.models.price import PRICE_BAR_SCHEMA
+from deepalpha.adapters.base_adapter import BaseAdapter
+from deepalpha.models.price_model import PRICE_BAR_SCHEMA
 
 class FMPAdapter(BaseAdapter):
     source_name = "fmp"
@@ -537,7 +543,7 @@ class FMPAdapter(BaseAdapter):
                 pl.lit(0.0).alias("dividends"),
                 pl.lit(0.0).alias("splits"),
                 pl.lit(False).alias("repaired"),
-                pl.lit(now).alias("fetched_at"),
+                pl.lit(now).cast(PRICE_BAR_SCHEMA["fetched_at"]).alias("fetched_at"),
             ])
             .select(PRICE_BAR_SCHEMA.names())
             .cast(PRICE_BAR_SCHEMA)
@@ -548,50 +554,52 @@ Fields dropped by `.select()`: `unadjustedClose`, `change`, `changePercent` (not
 
 ---
 
-### `adapters/yfinance.py` — YFinanceAdapter
+### `adapters/yfinance_adapter.py` — YFinanceAdapter
 
 YFinanceAdapter handles the full surface of yfinance's data types. Key transformation patterns:
 
 - **Column rename:** yfinance uses `Open/High/Low/Close` (PascalCase) and `Stock Splits` (with space) → canonical uses snake_case
-- **Index reset:** `history()` returns a DatetimeIndex; adapter calls `.reset_index()` before `pl.from_pandas()`
-- **Symbol injection:** yfinance does not include a `symbol` column in `history()` output; adapter receives `symbol` as a parameter and injects it
+- **Index reset + symbol injection:** `YFinanceLoader` already resets the DatetimeIndex and injects the `symbol` column into the raw df before handing it to the adapter. Adapter signatures are therefore identical to `BaseAdapter` — no extra parameters needed.
 - **`Repaired?` optional column:** only present when `repair=True`; adapter fills with `False` if absent
 - **`adj_close`:** loader uses `auto_adjust=False`, so `Adj Close` is always present alongside `Close`
 - **Wide → tidy for financials:** yfinance returns financials as a wide DataFrame (rows=metrics, columns=dates); adapter transposes to tidy (rows=periods)
 
 ```python
+from deepalpha.adapters.base_adapter import BaseAdapter
+from deepalpha.models.price_model import PRICE_BAR_SCHEMA
+
 class YFinanceAdapter(BaseAdapter):
     source_name = "yfinance"
 
-    def adapt_price(self, raw: pl.DataFrame, symbol: str) -> pl.DataFrame:
+    def adapt_price(self, raw: pl.DataFrame) -> pl.DataFrame:
         now = datetime.now(timezone.utc)
-        repaired_col = "Repaired?" if "Repaired?" in raw.columns else None
         df = raw.rename({
             "Date": "date", "Open": "open", "High": "high",
             "Low": "low", "Close": "close", "Volume": "volume",
             "Dividends": "dividends", "Stock Splits": "splits",
             "Adj Close": "adj_close",
         })
-        if repaired_col:
+        if "Repaired?" in df.columns:
             df = df.rename({"Repaired?": "repaired"})
         else:
             df = df.with_columns(pl.lit(False).alias("repaired"))
         return (
             df
-            .with_columns([
-                pl.lit(symbol).alias("symbol"),
-                pl.lit(now).alias("fetched_at"),
-            ])
+            .with_columns(
+                pl.lit(now).cast(PRICE_BAR_SCHEMA["fetched_at"]).alias("fetched_at")
+            )
             .select(PRICE_BAR_SCHEMA.names())
             .cast(PRICE_BAR_SCHEMA)
         )
 ```
 
+`symbol` is already in `raw` because `YFinanceLoader` injects it before returning.
+
 ---
 
 ## YFinanceLoader
 
-### `sources/yfinance_loader/config.py`
+### `loaders/yfinance_loader/yfinance_config.py`
 
 ```python
 from typing import Optional
@@ -608,7 +616,7 @@ class YFinanceConfig(BaseSettings):
     model_config = {"env_prefix": "YF_"}
 ```
 
-### `sources/yfinance_loader/loader.py`
+### `loaders/yfinance_loader/yfinance_loader.py`
 
 #### Initialization
 
@@ -642,7 +650,8 @@ def __init__(self, config: YFinanceConfig):
 | `esg` | `ticker.sustainability` | |
 | `institutional_holders` | `ticker.institutional_holders` | |
 | `insider_transactions` | `ticker.insider_transactions` | |
-| `funds_data` | `ticker.funds_data` | FundsData object; split into fund_overview + fund_holdings |
+| `fund_overview` | `ticker.funds_data.fund_overview` + `fund_operations` | produces `FUND_OVERVIEW_SCHEMA` |
+| `fund_holdings` | `ticker.funds_data.top_holdings` + `sector_weightings` | produces `FUND_HOLDINGS_SCHEMA` + `SECTOR_WEIGHTS_SCHEMA` |
 | `sector` | `yf.Sector(key)` | `symbols` treated as sector keys |
 | `industry` | `yf.Industry(key)` | `symbols` treated as industry keys |
 | `calendar` | `ticker.calendar` | returns dict; adapter converts |
@@ -650,6 +659,8 @@ def __init__(self, config: YFinanceConfig):
 | `screen` | `yf.screen(EquityQuery, ...)` | `symbols` unused; `kwargs` carries query dict |
 
 #### Bulk price fetch strategy
+
+The loader always injects `symbol` into the returned raw df so adapter signatures stay uniform.
 
 ```python
 def _fetch_price(self, symbols, start_date, end_date, interval, **kwargs):
@@ -664,18 +675,22 @@ def _fetch_price(self, symbols, start_date, end_date, interval, **kwargs):
             multi_level_index=False,   # flatten to "Close_AAPL" format
             progress=False,
         )
-        # melt flat columns back to tidy format with symbol column
+        # _melt_bulk_price pivots "Close_AAPL" columns → tidy rows with symbol column
         return self._melt_bulk_price(raw_pd, symbols)
     else:
-        ticker = yf.Ticker(symbols[0])
+        symbol = symbols[0]
+        ticker = yf.Ticker(symbol)
         raw_pd = ticker.history(
             start=start_date, end=end_date,
             interval=interval,
             auto_adjust=False,
             repair=self.config.repair,
         )
-        return pl.from_pandas(raw_pd.reset_index())
+        df = pl.from_pandas(raw_pd.reset_index())
+        return df.with_columns(pl.lit(symbol).alias("symbol"))   # inject symbol
 ```
+
+`_melt_bulk_price` pivots the flat multi-symbol pandas DataFrame (columns `Close_AAPL`, `Open_AAPL`, …) into tidy format where each row has a `symbol` column. Implementation: reset index, melt on date, parse `{field}_{symbol}` column names, pivot back to wide-per-symbol.
 
 #### Rate limiting
 
@@ -709,7 +724,12 @@ def stream(self, symbols: list[str], callback, async_mode: bool = False) -> None
 async def _stream_async(self, symbols, callback):
     ws = yf.AsyncWebSocket()
     async def _on_tick(data):
-        df = pl.DataFrame([{...}]).cast(TICK_SCHEMA)
+        df = pl.DataFrame([{
+            "symbol":  data["id"],
+            "price":   data["price"],
+            "volume":  data.get("dayVolume", 0),
+            "tick_at": datetime.now(timezone.utc),
+        }]).cast(TICK_SCHEMA)
         await callback(df)
     await ws.subscribe(symbols, callback=_on_tick)
     await ws.listen()
@@ -731,45 +751,43 @@ def _fetch_screen(self, query_dict: dict, sort_field: str = "marketcap",
 
 ---
 
-## Changes to Existing Code
+## Migration from Old Code
 
-### `sources/fmp_loader/loader.py`
+No backward compatibility. Delete old files and rewrite from scratch per the new structure.
 
-Remove the rename/select transformation from `_fetch_price()`. The loader returns the raw API response (with FMP's original field names: `adjClose`, `unadjustedClose`, `changePercent`). Field mapping moves entirely into `FMPAdapter.adapt_price()`.
+### Files to delete
 
-**Before:**
+- `src/deepalpha/sources/` — entire directory (replaced by `loaders/`)
+- `src/deepalpha/base/source.py` → replaced by `base/base_source.py`
+- `src/deepalpha/base/processor.py` → replaced by `base/base_processor.py`
+- `src/deepalpha/processors/price_cleaner/cleaner.py` → replaced by `price_cleaner.py`
+- `src/deepalpha/processors/price_cleaner/schemas.py` → replaced by `price_schema.py`
+- `src/deepalpha/api/schemas.py` → replaced by `api_schemas.py`
+
+### `loaders/fmp_loader/fmp_loader.py` (rewrite)
+
+`_fetch_price()` returns the raw FMP API response with no field renaming or selecting. All transformation moves to `FMPAdapter`.
 
 ```python
-return df.select([...]).rename({"adjClose": "adj_close", ...})
+return df   # raw FMP column names: adjClose, unadjustedClose, changePercent, ...
 ```
 
-**After:**
+### `processors/price_cleaner/price_schema.py` (new file)
+
+`PriceCleaner` outputs `PRICE_BAR_SCHEMA` fields plus `is_anomaly` and `market`. Use `dict()` to extend the schema:
 
 ```python
-return df   # raw FMP column names, no transformation
-```
-
-### `sources/fmp_loader/schemas.py`
-
-Deprecated. `get_price_schema()` and `get_financials_schema()` are replaced by `models/price.PRICE_BAR_SCHEMA` and `models/financials.INCOME_STMT_SCHEMA`. The file remains temporarily to avoid breaking `validate()` in `FMPLoader` until that method is updated.
-
-### `processors/price_cleaner/schemas.py`
-
-`PriceCleaner` computes `is_anomaly` (used by downstream consumers) and adds `market` (used for partitioning). These are legitimate output columns, not intermediates. Define an extended schema that is a strict superset of `PRICE_BAR_SCHEMA`:
-
-```python
-# processors/price_cleaner/schemas.py
-from deepalpha.models.price import PRICE_BAR_SCHEMA
+from deepalpha.models.price_model import PRICE_BAR_SCHEMA
 import polars as pl
 
 CLEANED_PRICE_SCHEMA = pl.Schema({
-    **PRICE_BAR_SCHEMA,
+    **dict(PRICE_BAR_SCHEMA),
     "is_anomaly": pl.Boolean,
     "market":     pl.String,
 })
 ```
 
-`PriceCleaner.process()` is updated to return a DataFrame matching `CLEANED_PRICE_SCHEMA`. The input is expected to conform to `PRICE_BAR_SCHEMA` (i.e., it has already passed through an adapter).
+`PriceCleaner.process()` input must conform to `PRICE_BAR_SCHEMA` (i.e., come from an adapter). Output conforms to `CLEANED_PRICE_SCHEMA`.
 
 ---
 
@@ -794,9 +812,9 @@ CLEANED_PRICE_SCHEMA = pl.Schema({
 ## Usage Example (End-to-End)
 
 ```python
-from deepalpha.sources.yfinance_loader.loader import YFinanceLoader
-from deepalpha.sources.yfinance_loader.config import YFinanceConfig
-from deepalpha.adapters.yfinance import YFinanceAdapter
+from deepalpha.loaders.yfinance_loader.yfinance_loader import YFinanceLoader
+from deepalpha.loaders.yfinance_loader.yfinance_config import YFinanceConfig
+from deepalpha.adapters.yfinance_adapter import YFinanceAdapter
 
 loader = YFinanceLoader(YFinanceConfig())
 adapter = YFinanceAdapter()
