@@ -126,34 +126,324 @@ class BaseLoader(ABC):
         return pl.DataFrame([v.model_dump() for v in validated])
 ```
 
-### 3.2 Abstract Loader 示例
+### 3.2 共享枚举类型（`loaders/enums.py`）
+
+抽象接口使用枚举约束参数，避免魔术字符串，也便于不同 provider 验证自身支持范围：
 
 ```python
-# src/deepalpha/loaders/market.py
-from abc import abstractmethod
-import polars as pl
-from deepalpha.loaders.base import BaseLoader
-from deepalpha.models.market import StockQuote, PriceBar
+# src/deepalpha/loaders/enums.py
+from enum import StrEnum
 
+class AssetClass(StrEnum):
+    STOCK = "stock"
+    ETF = "etf"
+    INDEX = "index"
+    CRYPTO = "crypto"
+    FOREX = "forex"
+    COMMODITY = "commodity"
+    MUTUAL_FUND = "mutual_fund"
+
+class Interval(StrEnum):
+    ONE_MIN    = "1m"
+    FIVE_MIN   = "5m"
+    FIFTEEN_MIN = "15m"
+    THIRTY_MIN = "30m"
+    ONE_HOUR   = "1h"
+    FOUR_HOUR  = "4h"
+    ONE_DAY    = "1d"
+    ONE_WEEK   = "1w"
+    ONE_MONTH  = "1mo"
+
+class StatementPeriod(StrEnum):
+    ANNUAL  = "annual"
+    QUARTER = "quarter"
+    TTM     = "ttm"      # Trailing Twelve Months
+
+class IndicatorType(StrEnum):
+    SMA     = "sma"
+    EMA     = "ema"
+    DEMA    = "dema"
+    TEMA    = "tema"
+    WMA     = "wma"
+    RSI     = "rsi"
+    ADX     = "adx"
+    WILLIAMS = "williams"
+    STD_DEV = "std_dev"
+
+class MoverDirection(StrEnum):
+    GAINERS = "gainers"
+    LOSERS  = "losers"
+    ACTIVE  = "active"
+
+class CongressChamber(StrEnum):
+    SENATE = "senate"
+    HOUSE  = "house"
+```
+
+---
+
+### 3.3 Abstract Loader 接口设计
+
+**设计原则**：方法签名以金融领域语义为中心，不绑定任何 provider 的 endpoint 结构。同一个抽象方法可由不同 provider 通过不同端点或参数组合实现。
+
+#### `AbstractMarketLoader`
+
+```python
 class AbstractMarketLoader(BaseLoader):
+    # 单条报价 → Pydantic 对象
     @abstractmethod
-    async def get_quote(self, symbol: str) -> StockQuote: ...
+    async def get_quote(self, symbol: str) -> Quote: ...
 
+    # 批量报价 → DataFrame
     @abstractmethod
     async def get_quotes(self, symbols: list[str]) -> pl.DataFrame: ...
 
+    # 统一历史行情：interval="1d" 为日线，"1h"/"5m" 等为日内
+    # 不同 provider 内部路由到各自端点，调用方无感知
     @abstractmethod
-    async def get_historical_prices(
-        self, symbol: str, from_date: str, to_date: str
+    async def get_price_history(
+        self,
+        symbol: str,
+        start: date,
+        end: date | None = None,
+        interval: Interval = Interval.ONE_DAY,
+        adjusted: bool = True,
     ) -> pl.DataFrame: ...
 
+    # 全市场快照，按资产类别区分
     @abstractmethod
-    async def get_intraday(
-        self, symbol: str, interval: str, from_date: str, to_date: str
+    async def get_market_snapshot(
+        self, asset_class: AssetClass = AssetClass.STOCK
     ) -> pl.DataFrame: ...
 ```
 
-### 3.3 `FMPAsyncClient`
+> **FMP 实现映射**：`interval=ONE_DAY` → `historical-price-eod-full`；`interval=ONE_HOUR` → `intraday-1-hour`；`adjusted=False` → `historical-price-eod-non-split-adjusted`；`asset_class=CRYPTO` → `full-cryptocurrency-quotes`。
+
+---
+
+#### `AbstractFinancialLoader`
+
+```python
+class AbstractFinancialLoader(BaseLoader):
+    # 三张表统一用 period 参数，"ttm" 即 TTM，不需要独立方法
+    @abstractmethod
+    async def get_income_statement(
+        self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_balance_sheet(
+        self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_cash_flow_statement(
+        self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_financial_ratios(
+        self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_key_metrics(
+        self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_valuation(self, symbol: str) -> Valuation: ...
+```
+
+---
+
+#### `AbstractCompanyLoader`
+
+```python
+class AbstractCompanyLoader(BaseLoader):
+    @abstractmethod
+    async def get_profile(self, symbol: str) -> CompanyProfile: ...
+
+    @abstractmethod
+    async def get_executives(self, symbol: str) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_peers(self, symbol: str) -> list[str]: ...
+
+    @abstractmethod
+    async def get_market_cap(
+        self, symbol: str, start: date | None = None, end: date | None = None
+    ) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractAnalystLoader`
+
+```python
+class AbstractAnalystLoader(BaseLoader):
+    @abstractmethod
+    async def get_ratings(self, symbol: str) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_price_targets(self, symbol: str) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_estimates(
+        self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL
+    ) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractCalendarLoader`
+
+```python
+class AbstractCalendarLoader(BaseLoader):
+    @abstractmethod
+    async def get_earnings_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_dividend_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_ipo_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_splits_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractNewsLoader`
+
+```python
+class AbstractNewsLoader(BaseLoader):
+    # symbols=None 表示全市场新闻；asset_class 用于过滤加密/外汇等
+    @abstractmethod
+    async def get_news(
+        self,
+        symbols: list[str] | None = None,
+        asset_class: AssetClass | None = None,
+        limit: int = 20,
+        start: date | None = None,
+        end: date | None = None,
+    ) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractTechnicalLoader`
+
+```python
+class AbstractTechnicalLoader(BaseLoader):
+    # 统一接口，indicator 参数决定计算类型
+    @abstractmethod
+    async def get_indicator(
+        self,
+        symbol: str,
+        indicator: IndicatorType,
+        period: int,
+        interval: Interval = Interval.ONE_DAY,
+        start: date | None = None,
+        end: date | None = None,
+    ) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractInsiderLoader`
+
+```python
+class AbstractInsiderLoader(BaseLoader):
+    # symbol=None 返回全市场最新；有 symbol 则过滤
+    @abstractmethod
+    async def get_trades(
+        self, symbol: str | None = None, limit: int = 50, page: int = 0
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_statistics(self, symbol: str) -> InsiderStatistics: ...
+```
+
+---
+
+#### `AbstractSecFilingLoader`
+
+```python
+class AbstractSecFilingLoader(BaseLoader):
+    # 统一查询入口，symbol/form_type 可选
+    @abstractmethod
+    async def get_filings(
+        self,
+        symbol: str | None = None,
+        form_type: str | None = None,
+        start: date | None = None,
+        end: date | None = None,
+        limit: int = 20,
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_company_profile(self, symbol: str) -> SecCompanyProfile: ...
+```
+
+---
+
+#### `AbstractMarketPerfLoader`
+
+```python
+class AbstractMarketPerfLoader(BaseLoader):
+    # direction 枚举统一三种榜单
+    @abstractmethod
+    async def get_movers(
+        self, direction: MoverDirection, limit: int = 20
+    ) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_sector_performance(self, date: date | None = None) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_sector_pe(self, date: date | None = None) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractCongressLoader`
+
+```python
+class AbstractCongressLoader(BaseLoader):
+    # chamber 枚举统一参众两院
+    @abstractmethod
+    async def get_trades(
+        self,
+        symbol: str | None = None,
+        chamber: CongressChamber = CongressChamber.SENATE,
+        limit: int = 50,
+        page: int = 0,
+    ) -> pl.DataFrame: ...
+```
+
+---
+
+#### `AbstractDirectoryLoader`
+
+```python
+class AbstractDirectoryLoader(BaseLoader):
+    # asset_class 过滤标的类别
+    @abstractmethod
+    async def get_symbols(self, asset_class: AssetClass = AssetClass.STOCK) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_exchanges(self) -> pl.DataFrame: ...
+
+    @abstractmethod
+    async def get_sectors(self) -> list[str]: ...
+
+    @abstractmethod
+    async def get_industries(self) -> list[str]: ...
+```
+
+### 3.4 `FMPAsyncClient`
 
 ```python
 # src/deepalpha/providers/fmp/client.py
@@ -182,7 +472,7 @@ class FMPAsyncClient:
 
 **重试策略**：遇到 5xx 错误时使用指数退避（初始 1s，最多 `max_retries` 次），429 错误等待 `Retry-After` 响应头指定的时间后重试。
 
-### 3.4 `FMPConfig`
+### 3.5 `FMPConfig`
 
 ```python
 # src/deepalpha/providers/fmp/config.py
@@ -199,7 +489,7 @@ class FMPConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="FMP_", env_file=".env")
 ```
 
-### 3.5 Pydantic 模型规范
+### 3.6 Pydantic 模型规范
 
 所有模型继承 `pydantic.BaseModel`，使用 `model_config = ConfigDict(populate_by_name=True)` 以兼容 FMP camelCase 字段名。
 
@@ -224,7 +514,7 @@ class StockQuote(BaseModel):
     timestamp: datetime = Field(title="时间戳", description="报价数据的生成时间（UTC）")
 ```
 
-### 3.6 `FMPDataHub`
+### 3.7 `FMPDataHub`
 
 ```python
 # src/deepalpha/providers/fmp/__init__.py
@@ -277,191 +567,119 @@ async with FMPDataHub() as hub:
 
 ### 4.1 MarketLoader — 行情数据
 
-| 方法 | 返回类型 | 说明 |
-|---|---|---|
-| `get_quote(symbol)` | `StockQuote` | 单股实时报价 |
-| `get_quotes(symbols)` | `DataFrame[StockQuote]` | 批量实时报价 |
-| `get_quote_short(symbol)` | `StockQuoteShort` | 简版报价（价格+成交量） |
-| `get_price_change(symbol)` | `PriceChange` | 多周期涨跌幅 |
-| `get_aftermarket_quote(symbol)` | `AfterMarketQuote` | 盘后报价 |
-| `get_aftermarket_trade(symbol)` | `AfterMarketTrade` | 盘后成交 |
-| `get_historical_prices(symbol, from_date, to_date)` | `DataFrame[PriceBar]` | 日线历史（复权） |
-| `get_historical_prices_unadjusted(symbol, ...)` | `DataFrame[PriceBar]` | 日线历史（不复权） |
-| `get_intraday(symbol, interval, ...)` | `DataFrame[PriceBar]` | 日内K线（1/5/15/30min, 1h, 4h） |
-| `get_full_exchange_quotes(exchange)` | `DataFrame[StockQuote]` | 某交易所所有股票报价 |
-| `get_full_etf_quotes()` | `DataFrame[StockQuote]` | 全部 ETF 报价 |
-| `get_full_index_quotes()` | `DataFrame[IndexQuote]` | 全部指数报价 |
-| `get_full_crypto_quotes()` | `DataFrame[CryptoQuote]` | 全部加密货币报价 |
-| `get_full_forex_quotes()` | `DataFrame[ForexQuote]` | 全部外汇报价 |
-| `get_full_commodity_quotes()` | `DataFrame[CommodityQuote]` | 全部大宗商品报价 |
+| 抽象方法 | FMP 实现映射 |
+|---|---|
+| `get_quote(symbol)` | `GET /stable/quote/{symbol}` |
+| `get_quotes(symbols)` | `GET /stable/quotes-batch` |
+| `get_price_history(symbol, interval="1d", adjusted=True)` | `historical-price-eod-full`；`adjusted=False` → `non-split-adjusted` |
+| `get_price_history(symbol, interval="1h"\|"5m"\|...)` | `intraday-1-hour` / `intraday-5-min` 等，由 interval 值路由 |
+| `get_market_snapshot(asset_class=STOCK)` | `full-exchange-quotes`；CRYPTO→`full-cryptocurrency-quotes`；ETF→`full-etf-quotes` 等 |
+
+> **FMP 具体实现可额外提供** `get_aftermarket_quote`、`get_price_change` 等非抽象方法，供需要 FMP 特有数据时调用，不影响接口契约。
 
 ### 4.2 FinancialLoader — 财务报表
 
-| 方法 | 返回类型 | 说明 |
-|---|---|---|
-| `get_income_statements(symbol, period, limit)` | `DataFrame[IncomeStatement]` | 利润表 |
-| `get_income_statements_ttm(symbol)` | `IncomeStatementTTM` | 利润表 TTM |
-| `get_income_statement_growth(symbol, period)` | `DataFrame[StatementGrowth]` | 利润表增长率 |
-| `get_balance_sheets(symbol, period, limit)` | `DataFrame[BalanceSheet]` | 资产负债表 |
-| `get_balance_sheets_ttm(symbol)` | `BalanceSheetTTM` | 资产负债表 TTM |
-| `get_cash_flows(symbol, period, limit)` | `DataFrame[CashFlow]` | 现金流量表 |
-| `get_cash_flows_ttm(symbol)` | `CashFlowTTM` | 现金流量表 TTM |
-| `get_financial_ratios(symbol, period, limit)` | `DataFrame[FinancialRatios]` | 财务比率 |
-| `get_financial_ratios_ttm(symbol)` | `FinancialRatiosTTM` | 财务比率 TTM |
-| `get_key_metrics(symbol, period, limit)` | `DataFrame[KeyMetrics]` | 关键指标 |
-| `get_key_metrics_ttm(symbol)` | `KeyMetricsTTM` | 关键指标 TTM |
-| `get_enterprise_values(symbol, period)` | `DataFrame[EnterpriseValue]` | 企业价值 |
-| `get_financial_scores(symbol)` | `FinancialScores` | 财务评分（Piotroski 等） |
-| `get_dcf(symbol)` | `DCFValuation` | DCF 估值 |
-| `get_dcf_levered(symbol)` | `DCFValuation` | 杠杆 DCF 估值 |
-| `get_owner_earnings(symbol)` | `DataFrame[OwnerEarnings]` | 所有者收益 |
-| `get_revenue_by_geography(symbol)` | `DataFrame[RevenueSegment]` | 地区收入分布 |
-| `get_revenue_by_product(symbol)` | `DataFrame[RevenueSegment]` | 产品收入分布 |
-| `get_as_reported_income(symbol)` | `DataFrame[AsReportedStatement]` | 原始申报利润表 |
-| `get_as_reported_balance(symbol)` | `DataFrame[AsReportedStatement]` | 原始申报资产负债表 |
-| `get_as_reported_cashflow(symbol)` | `DataFrame[AsReportedStatement]` | 原始申报现金流量表 |
+| 抽象方法 | FMP 实现映射 |
+|---|---|
+| `get_income_statement(symbol, period="annual"\|"quarter"\|"ttm")` | `income-statement`；`ttm` → `income-statements-ttm` |
+| `get_balance_sheet(symbol, period, limit)` | `balance-sheet-statement`；`ttm` → `balance-sheet-statements-ttm` |
+| `get_cash_flow_statement(symbol, period, limit)` | `cashflow-statement`；`ttm` → `cashflow-statements-ttm` |
+| `get_financial_ratios(symbol, period, limit)` | `metrics-ratios`；`ttm` → `metrics-ratios-ttm` |
+| `get_key_metrics(symbol, period, limit)` | `key-metrics`；`ttm` → `key-metrics-ttm` |
+| `get_valuation(symbol)` | `dcf-advanced`（返回 DCF + 企业价值合并对象） |
+
+> **FMP 额外方法**（非抽象）：`get_owner_earnings`、`get_revenue_segments`、`get_financial_scores`、`get_as_reported_statements`、`get_statement_growth`。
 
 ### 4.3 CompanyLoader — 公司数据
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_profile(symbol)` | 公司概况（单对象） |
-| `get_profile_by_cik(cik)` | 按 CIK 查询公司概况 |
-| `get_executives(symbol)` | 高管团队列表 |
-| `get_employee_count(symbol)` | 最新员工数 |
-| `get_historical_employee_count(symbol)` | 历史员工数 DataFrame |
-| `get_market_cap(symbol)` | 当前市值 |
-| `get_historical_market_cap(symbol, ...)` | 历史市值 DataFrame |
-| `get_batch_market_cap(symbols)` | 批量市值 DataFrame |
-| `get_shares_float(symbol)` | 流通股本 |
-| `get_peers(symbol)` | 同业对比列表 |
-| `get_mergers_acquisitions(limit)` | 最新并购事件 DataFrame |
-| `get_executive_compensation(symbol)` | 高管薪酬 DataFrame |
-| `get_company_notes(symbol)` | 公司备注 |
+| `get_profile(symbol)` | `profile-symbol` |
+| `get_executives(symbol)` | `company-executives` |
+| `get_peers(symbol)` | `peers` |
+| `get_market_cap(symbol, start, end)` | `start/end=None` → `market-cap`；有日期范围 → `historical-market-cap` |
+
+> **FMP 额外方法**：`get_profile_by_cik`、`get_shares_float`、`get_employee_count`、`get_mergers_acquisitions`、`get_executive_compensation`。
 
 ### 4.4 AnalystLoader — 分析师数据
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_grades(symbol)` | 当前评级 |
-| `get_grades_summary(symbol)` | 评级汇总 |
-| `get_historical_grades(symbol)` | 历史评级 DataFrame |
-| `get_ratings_snapshot(symbol)` | 评级快照 |
-| `get_historical_ratings(symbol)` | 历史综合评分 DataFrame |
-| `get_price_target_consensus(symbol)` | 目标价共识 |
-| `get_price_target_summary(symbol)` | 目标价汇总 |
-| `get_financial_estimates(symbol, period)` | 盈利/营收预期 DataFrame |
+| `get_ratings(symbol)` | `historical-ratings`（含历史综合评分） |
+| `get_price_targets(symbol)` | `price-target-summary` + `price-target-consensus` 合并 |
+| `get_estimates(symbol, period)` | `financial-estimates` |
+
+> **FMP 额外方法**：`get_grades`、`get_grades_summary`、`get_ratings_snapshot`。
 
 ### 4.5 CalendarLoader — 市场日历
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_earnings_calendar(from_date, to_date)` | 全市场财报日历 DataFrame |
-| `get_company_earnings(symbol)` | 某公司历史财报日期 DataFrame |
-| `get_dividends_calendar(from_date, to_date)` | 分红日历 DataFrame |
-| `get_company_dividends(symbol)` | 某公司历史分红 DataFrame |
-| `get_ipo_calendar(from_date, to_date)` | IPO 日历 DataFrame |
-| `get_ipo_prospectus(from_date, to_date)` | IPO 招股说明书 DataFrame |
-| `get_ipo_disclosure(from_date, to_date)` | IPO 披露 DataFrame |
-| `get_splits_calendar(from_date, to_date)` | 拆股日历 DataFrame |
-| `get_company_splits(symbol)` | 某公司历史拆股记录 DataFrame |
+| `get_earnings_calendar(start, end)` | `earnings-calendar`；可附加 `earnings-company(symbol)` 作为可选参数路由 |
+| `get_dividend_calendar(start, end)` | `dividends-calendar` |
+| `get_ipo_calendar(start, end)` | `ipos-calendar` |
+| `get_splits_calendar(start, end)` | `splits-calendar` |
+
+> **FMP 额外方法**：`get_ipo_prospectus`、`get_ipo_disclosure`、`get_company_dividends`、`get_company_splits`。
 
 ### 4.6 NewsLoader — 新闻
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_stock_news(limit, from_date, to_date)` | 全市场股票新闻 DataFrame |
-| `get_stock_news_by_symbols(symbols, ...)` | 指定标的新闻 DataFrame |
-| `get_general_news(limit, ...)` | 通用财经新闻 DataFrame |
-| `get_crypto_news(limit, ...)` | 加密货币新闻 DataFrame |
-| `get_forex_news(limit, ...)` | 外汇新闻 DataFrame |
-| `get_press_releases(limit, ...)` | 新闻稿 DataFrame |
-| `get_press_releases_by_symbol(symbol, ...)` | 指定公司新闻稿 DataFrame |
-| `get_fmp_articles(limit, ...)` | FMP 自制文章 DataFrame |
+| `get_news(symbols=None, asset_class=None, ...)` | `symbols` 有值 → `search-stock-news`；`asset_class=CRYPTO` → `crypto-news`；`asset_class=FOREX` → `forex-news`；无参数 → `general-news` |
+
+> **FMP 额外方法**：`get_press_releases`、`get_fmp_articles`。
 
 ### 4.7 TechnicalLoader — 技术指标
 
-所有方法签名：`get_xxx(symbol, period_length, timeframe, from_date, to_date) -> DataFrame`
-
-支持时间周期：`1min / 5min / 15min / 30min / 1hour / 4hour / 1day`
-
-| 方法 | 指标 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_sma` | 简单移动平均线 |
-| `get_ema` | 指数移动平均线 |
-| `get_dema` | 双重指数移动平均线 |
-| `get_tema` | 三重指数移动平均线 |
-| `get_wma` | 加权移动平均线 |
-| `get_rsi` | 相对强弱指数 |
-| `get_adx` | 平均趋向指数 |
-| `get_williams` | 威廉指标 %R |
-| `get_std_dev` | 标准差 |
+| `get_indicator(symbol, indicator, period, interval, ...)` | `indicator` 值路由到对应端点：`SMA`→`simple-moving-average`，`RSI`→`relative-strength-index`，等 |
+
+FMP 支持的 `indicator` 值：`SMA`、`EMA`、`DEMA`、`TEMA`、`WMA`、`RSI`、`ADX`、`WILLIAMS`、`STD_DEV`
 
 ### 4.8 InsiderLoader — 内部人交易
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_latest_trades(limit, page)` | 最新内部人交易 DataFrame |
-| `get_trades_by_symbol(symbol, ...)` | 某标的内部人交易 DataFrame |
-| `get_trades_by_reporting_name(name, ...)` | 按申报人姓名查询 DataFrame |
-| `get_statistics(symbol)` | 内部人交易统计（单对象） |
-| `get_acquisition_ownership(symbol)` | 收购持股变动 DataFrame |
-| `get_transaction_types()` | 所有交易类型参考列表 |
+| `get_trades(symbol=None, limit, page)` | `symbol=None` → `latest-insider-trade`；有值 → `search-insider-trades?symbol=...` |
+| `get_statistics(symbol)` | `insider-trade-statistics` |
+
+> **FMP 额外方法**：`get_trades_by_reporting_name`、`get_acquisition_ownership`。
 
 ### 4.9 SecFilingLoader — SEC 文件
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_filings_by_symbol(symbol, ...)` | 按标的查询 SEC 文件 DataFrame |
-| `get_filings_by_cik(cik, ...)` | 按 CIK 查询 DataFrame |
-| `get_filings_by_form_type(form_type, ...)` | 按表格类型查询 DataFrame |
-| `get_filings_by_name(company, ...)` | 按公司名查询 DataFrame |
-| `get_latest_financial_filings(limit)` | 最新财务文件 DataFrame |
-| `get_latest_8k(limit)` | 最新 8-K DataFrame |
-| `get_sec_company_profile(symbol)` | SEC 公司完整档案（单对象） |
-| `get_industry_classification(symbol)` | 行业 SIC 分类（单对象） |
-| `get_all_industry_classifications()` | 全部行业分类 DataFrame |
+| `get_filings(symbol, form_type, start, end, limit)` | 参数组合路由：有 `symbol` → `search-by-symbol`；有 `form_type` → `search-by-form-type`；都有 → 优先 symbol，form_type 作过滤 |
+| `get_company_profile(symbol)` | `sec-company-full-profile` |
+
+> **FMP 额外方法**：`get_latest_8k`、`get_latest_financial_filings`、`get_industry_classification`、`get_filings_by_cik`、`get_filings_by_name`。
 
 ### 4.10 MarketPerfLoader — 市场表现
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_gainers()` | 涨幅榜 DataFrame |
-| `get_losers()` | 跌幅榜 DataFrame |
-| `get_most_active()` | 成交最活跃 DataFrame |
-| `get_sector_pe_snapshot(date)` | 板块 PE 快照 DataFrame |
-| `get_industry_pe_snapshot(date)` | 行业 PE 快照 DataFrame |
-| `get_sector_performance_snapshot(date)` | 板块涨跌快照 DataFrame |
-| `get_industry_performance_snapshot(date)` | 行业涨跌快照 DataFrame |
-| `get_historical_sector_pe(sector, ...)` | 板块历史 PE DataFrame |
-| `get_historical_industry_pe(industry, ...)` | 行业历史 PE DataFrame |
-| `get_historical_sector_performance(sector, ...)` | 板块历史涨跌 DataFrame |
-| `get_historical_industry_performance(industry, ...)` | 行业历史涨跌 DataFrame |
+| `get_movers(direction=GAINERS\|LOSERS\|ACTIVE, limit)` | `biggest-gainers` / `biggest-losers` / `most-active` |
+| `get_sector_performance(date=None)` | `date=None` → `sector-performance-snapshot`；有值 → `historical-sector-performance` |
+| `get_sector_pe(date=None)` | `date=None` → `sector-PE-snapshot`；有值 → `historical-sector-pe` |
+
+> **FMP 额外方法**：`get_industry_performance`、`get_industry_pe`（行业级别，抽象层暂只定义板块级）。
 
 ### 4.11 CongressLoader — 国会交易披露
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_senate_latest(limit, page)` | 参议院最新披露 DataFrame |
-| `get_senate_trades_by_symbol(symbol, ...)` | 按标的查参议院交易 DataFrame |
-| `get_senate_trades_by_name(name, ...)` | 按议员姓名查参议院交易 DataFrame |
-| `get_house_latest(limit, page)` | 众议院最新披露 DataFrame |
-| `get_house_trades_by_symbol(symbol, ...)` | 按标的查众议院交易 DataFrame |
-| `get_house_trades_by_name(name, ...)` | 按议员姓名查众议院交易 DataFrame |
+| `get_trades(symbol=None, chamber=SENATE\|HOUSE, limit, page)` | `chamber=SENATE + symbol=None` → `senate-latest`；有 symbol → `senate-trading`；`HOUSE` 同理路由 |
 
 ### 4.12 DirectoryLoader — 参考目录
 
-| 方法 | 说明 |
+| 抽象方法 | FMP 实现映射 |
 |---|---|
-| `get_actively_trading_list()` | 活跃交易标的列表 DataFrame |
-| `get_company_symbols()` | 全部公司标的列表 DataFrame |
-| `get_etf_list()` | 全部 ETF 列表 DataFrame |
-| `get_available_exchanges()` | 可用交易所列表 |
-| `get_available_sectors()` | 可用板块列表 |
-| `get_available_industries()` | 可用行业列表 |
-| `get_available_countries()` | 可用国家列表 |
-| `get_cik_list(limit, page)` | CIK 列表 DataFrame |
-| `get_symbol_changes()` | 标的代码变更记录 DataFrame |
+| `get_symbols(asset_class=STOCK)` | `STOCK` → `actively-trading-list`；`ETF` → `ETFs-list`；其他 → `company-symbols-list` |
+| `get_exchanges()` | `available-exchanges` |
+| `get_sectors()` | `available-sectors` |
+| `get_industries()` | `available-industries` |
 
 ---
 
