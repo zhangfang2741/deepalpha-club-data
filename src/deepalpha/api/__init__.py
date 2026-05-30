@@ -1,1 +1,0 @@
-"""DeepAlpha Data API Service"""
