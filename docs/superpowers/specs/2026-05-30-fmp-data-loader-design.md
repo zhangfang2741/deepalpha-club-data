@@ -190,16 +190,16 @@ class CongressChamber(StrEnum):
 
 ```python
 class AbstractMarketLoader(BaseLoader):
-    # 单条报价 → Pydantic 对象
     @abstractmethod
-    async def get_quote(self, symbol: str) -> Quote: ...
+    async def get_quote(self, symbol: str) -> Quote:
+        """获取单个标的实时报价，返回含价格、涨跌幅、成交量等字段的 Pydantic 对象。"""
+        ...
 
-    # 批量报价 → DataFrame
     @abstractmethod
-    async def get_quotes(self, symbols: list[str]) -> pl.DataFrame: ...
+    async def get_quotes(self, symbols: list[str]) -> pl.DataFrame:
+        """批量获取多个标的实时报价，返回 DataFrame，每行对应一个标的。"""
+        ...
 
-    # 统一历史行情：interval="1d" 为日线，"1h"/"5m" 等为日内
-    # 不同 provider 内部路由到各自端点，调用方无感知
     @abstractmethod
     async def get_price_history(
         self,
@@ -208,13 +208,19 @@ class AbstractMarketLoader(BaseLoader):
         end: date | None = None,
         interval: Interval = Interval.ONE_DAY,
         adjusted: bool = True,
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取历史 OHLCV 数据。interval="1d" 返回日线，"1h"/"5m" 等返回日内K线。
+        不同 provider 内部路由到各自端点，调用方无需感知差异。
+        adjusted=True 表示复权价格（默认）。
+        """
+        ...
 
-    # 全市场快照，按资产类别区分
     @abstractmethod
     async def get_market_snapshot(
         self, asset_class: AssetClass = AssetClass.STOCK
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取指定资产类别的全市场实时报价快照，返回该类别所有标的的当前行情 DataFrame。"""
+        ...
 ```
 
 > **FMP 实现映射**：`interval=ONE_DAY` → `historical-price-eod-full`；`interval=ONE_HOUR` → `intraday-1-hour`；`adjusted=False` → `historical-price-eod-non-split-adjusted`；`asset_class=CRYPTO` → `full-cryptocurrency-quotes`。
@@ -225,34 +231,45 @@ class AbstractMarketLoader(BaseLoader):
 
 ```python
 class AbstractFinancialLoader(BaseLoader):
-    # 三张表统一用 period 参数，"ttm" 即 TTM，不需要独立方法
     @abstractmethod
     async def get_income_statement(
         self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取利润表。period 支持 annual/quarter/ttm，ttm 为滚动12个月合并数据。"""
+        ...
 
     @abstractmethod
     async def get_balance_sheet(
         self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取资产负债表。period 支持 annual/quarter/ttm。"""
+        ...
 
     @abstractmethod
     async def get_cash_flow_statement(
         self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取现金流量表。period 支持 annual/quarter/ttm。"""
+        ...
 
     @abstractmethod
     async def get_financial_ratios(
         self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取财务比率，包含流动比率、毛利率、ROE、ROA、负债率等衍生指标。"""
+        ...
 
     @abstractmethod
     async def get_key_metrics(
         self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL, limit: int = 5
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取关键财务指标，包含 EPS、市销率、企业价值倍数、自由现金流收益率等。"""
+        ...
 
     @abstractmethod
-    async def get_valuation(self, symbol: str) -> Valuation: ...
+    async def get_valuation(self, symbol: str) -> Valuation:
+        """获取估值模型结果，包含 DCF 内在价值和当前价格的溢折价比较。"""
+        ...
 ```
 
 ---
@@ -262,18 +279,26 @@ class AbstractFinancialLoader(BaseLoader):
 ```python
 class AbstractCompanyLoader(BaseLoader):
     @abstractmethod
-    async def get_profile(self, symbol: str) -> CompanyProfile: ...
+    async def get_profile(self, symbol: str) -> CompanyProfile:
+        """获取公司基本信息，包含行业、交易所、员工数、描述、官网等。"""
+        ...
 
     @abstractmethod
-    async def get_executives(self, symbol: str) -> pl.DataFrame: ...
+    async def get_executives(self, symbol: str) -> pl.DataFrame:
+        """获取公司高管团队列表，包含姓名、职位、薪酬等信息。"""
+        ...
 
     @abstractmethod
-    async def get_peers(self, symbol: str) -> list[str]: ...
+    async def get_peers(self, symbol: str) -> list[str]:
+        """获取同行业可比公司的股票代码列表。"""
+        ...
 
     @abstractmethod
     async def get_market_cap(
         self, symbol: str, start: date | None = None, end: date | None = None
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取市值数据。start/end 均为 None 时返回当前市值；提供日期范围则返回历史市值序列。"""
+        ...
 ```
 
 ---
@@ -283,15 +308,21 @@ class AbstractCompanyLoader(BaseLoader):
 ```python
 class AbstractAnalystLoader(BaseLoader):
     @abstractmethod
-    async def get_ratings(self, symbol: str) -> pl.DataFrame: ...
+    async def get_ratings(self, symbol: str) -> pl.DataFrame:
+        """获取分析师评级历史，包含机构名称、买入/持有/卖出评级及变化时间。"""
+        ...
 
     @abstractmethod
-    async def get_price_targets(self, symbol: str) -> pl.DataFrame: ...
+    async def get_price_targets(self, symbol: str) -> pl.DataFrame:
+        """获取分析师目标价，包含最高/最低/平均/共识目标价及各机构预测值。"""
+        ...
 
     @abstractmethod
     async def get_estimates(
         self, symbol: str, period: StatementPeriod = StatementPeriod.ANNUAL
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取盈利与营收预期，包含 EPS 共识预测、营收预测及与实际值的对比。"""
+        ...
 ```
 
 ---
@@ -301,16 +332,24 @@ class AbstractAnalystLoader(BaseLoader):
 ```python
 class AbstractCalendarLoader(BaseLoader):
     @abstractmethod
-    async def get_earnings_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+    async def get_earnings_calendar(self, start: date, end: date) -> pl.DataFrame:
+        """获取指定日期范围内全市场的财报发布日历，包含预计发布日期、EPS 预期等。"""
+        ...
 
     @abstractmethod
-    async def get_dividend_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+    async def get_dividend_calendar(self, start: date, end: date) -> pl.DataFrame:
+        """获取指定日期范围内的分红除息日历，包含除息日、派息金额、股息率等。"""
+        ...
 
     @abstractmethod
-    async def get_ipo_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+    async def get_ipo_calendar(self, start: date, end: date) -> pl.DataFrame:
+        """获取指定日期范围内的 IPO 日历，包含公司名称、预计上市日期、发行价区间等。"""
+        ...
 
     @abstractmethod
-    async def get_splits_calendar(self, start: date, end: date) -> pl.DataFrame: ...
+    async def get_splits_calendar(self, start: date, end: date) -> pl.DataFrame:
+        """获取指定日期范围内的股票拆/合股日历，包含标的代码、拆股比例、生效日期等。"""
+        ...
 ```
 
 ---
@@ -319,7 +358,6 @@ class AbstractCalendarLoader(BaseLoader):
 
 ```python
 class AbstractNewsLoader(BaseLoader):
-    # symbols=None 表示全市场新闻；asset_class 用于过滤加密/外汇等
     @abstractmethod
     async def get_news(
         self,
@@ -328,7 +366,12 @@ class AbstractNewsLoader(BaseLoader):
         limit: int = 20,
         start: date | None = None,
         end: date | None = None,
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取财经新闻。symbols 有值时返回指定标的相关新闻；
+        asset_class 指定时按资产类别过滤（如 CRYPTO 返回加密货币新闻）；
+        两者均为 None 时返回全市场通用财经新闻。
+        """
+        ...
 ```
 
 ---
@@ -337,7 +380,6 @@ class AbstractNewsLoader(BaseLoader):
 
 ```python
 class AbstractTechnicalLoader(BaseLoader):
-    # 统一接口，indicator 参数决定计算类型
     @abstractmethod
     async def get_indicator(
         self,
@@ -347,7 +389,12 @@ class AbstractTechnicalLoader(BaseLoader):
         interval: Interval = Interval.ONE_DAY,
         start: date | None = None,
         end: date | None = None,
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """计算并返回技术指标时间序列。indicator 指定指标类型（SMA/EMA/RSI/ADX 等），
+        period 为计算周期数（如 RSI-14 传入 14），interval 指定K线粒度。
+        返回 DataFrame 包含时间戳和对应指标值。
+        """
+        ...
 ```
 
 ---
@@ -356,14 +403,19 @@ class AbstractTechnicalLoader(BaseLoader):
 
 ```python
 class AbstractInsiderLoader(BaseLoader):
-    # symbol=None 返回全市场最新；有 symbol 则过滤
     @abstractmethod
     async def get_trades(
         self, symbol: str | None = None, limit: int = 50, page: int = 0
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取内部人（高管/董事/大股东）交易记录。
+        symbol=None 时返回全市场最新交易；指定 symbol 时过滤至该标的。
+        """
+        ...
 
     @abstractmethod
-    async def get_statistics(self, symbol: str) -> InsiderStatistics: ...
+    async def get_statistics(self, symbol: str) -> InsiderStatistics:
+        """获取指定标的的内部人交易统计摘要，包含买入/卖出笔数、净买卖方向等聚合信息。"""
+        ...
 ```
 
 ---
@@ -372,7 +424,6 @@ class AbstractInsiderLoader(BaseLoader):
 
 ```python
 class AbstractSecFilingLoader(BaseLoader):
-    # 统一查询入口，symbol/form_type 可选
     @abstractmethod
     async def get_filings(
         self,
@@ -381,10 +432,16 @@ class AbstractSecFilingLoader(BaseLoader):
         start: date | None = None,
         end: date | None = None,
         limit: int = 20,
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """查询 SEC 文件。symbol/form_type 均可选，组合使用时取交集过滤。
+        form_type 示例：'10-K'、'10-Q'、'8-K'、'SC 13G' 等。
+        """
+        ...
 
     @abstractmethod
-    async def get_company_profile(self, symbol: str) -> SecCompanyProfile: ...
+    async def get_company_profile(self, symbol: str) -> SecCompanyProfile:
+        """获取公司在 SEC 系统中的注册档案，包含 CIK、SIC 行业代码、注册地址等。"""
+        ...
 ```
 
 ---
@@ -393,17 +450,24 @@ class AbstractSecFilingLoader(BaseLoader):
 
 ```python
 class AbstractMarketPerfLoader(BaseLoader):
-    # direction 枚举统一三种榜单
     @abstractmethod
     async def get_movers(
         self, direction: MoverDirection, limit: int = 20
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取市场涨跌榜或成交活跃榜。
+        direction=GAINERS 返回涨幅榜，LOSERS 返回跌幅榜，ACTIVE 返回成交额最活跃榜单。
+        """
+        ...
 
     @abstractmethod
-    async def get_sector_performance(self, date: date | None = None) -> pl.DataFrame: ...
+    async def get_sector_performance(self, date: date | None = None) -> pl.DataFrame:
+        """获取各板块涨跌表现。date=None 返回当日快照；指定日期返回该日历史数据。"""
+        ...
 
     @abstractmethod
-    async def get_sector_pe(self, date: date | None = None) -> pl.DataFrame: ...
+    async def get_sector_pe(self, date: date | None = None) -> pl.DataFrame:
+        """获取各板块市盈率（PE）。date=None 返回当前快照；指定日期返回历史 PE 数据。"""
+        ...
 ```
 
 ---
@@ -412,7 +476,6 @@ class AbstractMarketPerfLoader(BaseLoader):
 
 ```python
 class AbstractCongressLoader(BaseLoader):
-    # chamber 枚举统一参众两院
     @abstractmethod
     async def get_trades(
         self,
@@ -420,7 +483,12 @@ class AbstractCongressLoader(BaseLoader):
         chamber: CongressChamber = CongressChamber.SENATE,
         limit: int = 50,
         page: int = 0,
-    ) -> pl.DataFrame: ...
+    ) -> pl.DataFrame:
+        """获取美国国会议员股票交易披露记录。
+        chamber 区分参议院（SENATE）和众议院（HOUSE）；
+        symbol=None 返回最新全量披露，指定时过滤至该标的相关交易。
+        """
+        ...
 ```
 
 ---
@@ -429,18 +497,25 @@ class AbstractCongressLoader(BaseLoader):
 
 ```python
 class AbstractDirectoryLoader(BaseLoader):
-    # asset_class 过滤标的类别
     @abstractmethod
-    async def get_symbols(self, asset_class: AssetClass = AssetClass.STOCK) -> pl.DataFrame: ...
+    async def get_symbols(self, asset_class: AssetClass = AssetClass.STOCK) -> pl.DataFrame:
+        """获取指定资产类别的全量标的列表，包含代码、名称、交易所等基础信息。"""
+        ...
 
     @abstractmethod
-    async def get_exchanges(self) -> pl.DataFrame: ...
+    async def get_exchanges(self) -> pl.DataFrame:
+        """获取数据源支持的全部交易所列表，包含交易所代码、名称、所在国家等。"""
+        ...
 
     @abstractmethod
-    async def get_sectors(self) -> list[str]: ...
+    async def get_sectors(self) -> list[str]:
+        """获取数据源支持的全部板块名称列表，用于筛选或分类时的合法值参考。"""
+        ...
 
     @abstractmethod
-    async def get_industries(self) -> list[str]: ...
+    async def get_industries(self) -> list[str]:
+        """获取数据源支持的全部行业名称列表，粒度比板块更细，用于行业级别筛选。"""
+        ...
 ```
 
 ### 3.4 `FMPAsyncClient`
