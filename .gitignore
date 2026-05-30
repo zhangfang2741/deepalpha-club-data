@@ -32,6 +32,9 @@ build/
 # Claude Code
 .claude/settings.json
 
+# Worktrees
+.worktrees/
+
 # Node
 node_modules/
 npm-debug.log*
