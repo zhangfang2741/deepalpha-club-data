@@ -3,8 +3,6 @@
 import datetime
 from typing import Any
 
-import polars as pl
-
 from deepalpha.loaders.company_loader import AbstractCompanyLoader
 from deepalpha.models.company import CompanyProfile, Executive, MarketCapRecord
 
@@ -28,17 +26,17 @@ class FMPCompanyLoader(AbstractCompanyLoader):
         data = await self._get("/stable/profile", symbol=symbol)
         return CompanyProfile.model_validate(data)
 
-    async def get_executives(self, symbol: str) -> pl.DataFrame:
+    async def get_executives(self, symbol: str) -> list[Executive]:
         """获取高管名单。
 
         Args:
             symbol: 股票代码
 
         Returns:
-            高管信息 DataFrame
+            Executive 领域对象列表
         """
         records = await self._get_list("/stable/key-executives", symbol=symbol)
-        return self._to_df(records, Executive)
+        return self._to_models(records, Executive)
 
     async def get_peers(self, symbol: str) -> list[str]:
         """获取竞争对手列表。
@@ -52,12 +50,11 @@ class FMPCompanyLoader(AbstractCompanyLoader):
             竞争对手股票代码列表
         """
         records = await self._get_list("/stable/stock-peers", symbol=symbol)
-        peers: list[str] = [r.get("symbol", "") for r in records if r.get("symbol")]
-        return peers
+        return [r.get("symbol", "") for r in records if r.get("symbol")]
 
     async def get_market_cap(
         self, symbol: str, start: datetime.date | None = None, end: datetime.date | None = None
-    ) -> pl.DataFrame:
+    ) -> list[MarketCapRecord]:
         """获取市值数据。
 
         Args:
@@ -66,7 +63,7 @@ class FMPCompanyLoader(AbstractCompanyLoader):
             end: 结束日期（可选）
 
         Returns:
-            市值数据 DataFrame
+            MarketCapRecord 领域对象列表
         """
         if start is None and end is None:
             records = await self._get_list("/stable/market-capitalization", symbol=symbol)
@@ -77,4 +74,4 @@ class FMPCompanyLoader(AbstractCompanyLoader):
             if end:
                 params["to"] = str(end)
             records = await self._get_list("/stable/historical-market-capitalization", **params)
-        return self._to_df(records, MarketCapRecord)
+        return self._to_models(records, MarketCapRecord)
