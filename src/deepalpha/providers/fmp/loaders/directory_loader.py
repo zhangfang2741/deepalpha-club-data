@@ -1,5 +1,3 @@
-import polars as pl
-
 from deepalpha.loaders.directory_loader import AbstractDirectoryLoader
 from deepalpha.loaders.enums import AssetClass
 from deepalpha.models.directory import ExchangeInfo, SymbolInfo
@@ -18,27 +16,27 @@ _SYMBOL_PATHS: dict[AssetClass, str] = {
 class FMPDirectoryLoader(AbstractDirectoryLoader):
     """FMP 目录数据加载器。"""
 
-    async def get_symbols(self, asset_class: AssetClass = AssetClass.STOCK) -> pl.DataFrame:
+    async def get_symbols(self, asset_class: AssetClass = AssetClass.STOCK) -> list[SymbolInfo]:
         """获取证券代码列表。
 
         Args:
             asset_class: 资产类别（默认为股票）
 
         Returns:
-            证券代码信息 DataFrame
+            SymbolInfo 领域对象列表
         """
         path = _SYMBOL_PATHS.get(asset_class, "company-symbols-list")
         records = await self._get_list(f"/stable/{path}")
-        return self._to_df(records, SymbolInfo)
+        return self._to_models(records, SymbolInfo)
 
-    async def get_exchanges(self) -> pl.DataFrame:
+    async def get_exchanges(self) -> list[ExchangeInfo]:
         """获取交易所列表。
 
         Returns:
-            交易所信息 DataFrame
+            ExchangeInfo 领域对象列表
         """
         records = await self._get_list("/stable/available-exchanges")
-        return self._to_df(records, ExchangeInfo)
+        return self._to_models(records, ExchangeInfo)
 
     async def get_sectors(self) -> list[str]:
         """获取行业部门列表。
