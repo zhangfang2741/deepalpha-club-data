@@ -1,15 +1,13 @@
 from abc import abstractmethod
 
-import polars as pl
-
 from deepalpha.loaders.base import BaseLoader
-from deepalpha.models.insider import InsiderStatistics
+from deepalpha.models.insider import InsiderStatistics, InsiderTrade
 
 
 class AbstractInsiderTradeLoader(BaseLoader):
     @abstractmethod
     async def get_insider_trades(
         self, symbol: str | None = None, limit: int = 50, page: int = 0
-    ) -> pl.DataFrame: ...
+    ) -> list[InsiderTrade]: ...
     @abstractmethod
-    async def get_insider_statistics(self, symbol: str) -> InsiderStatistics: ...
+    async def get_insider_statistics(self, symbol: str) -> list[InsiderStatistics]: ...

@@ -1,5 +1,3 @@
-import polars as pl
-
 from deepalpha.loaders.insider_loader import AbstractInsiderTradeLoader
 from deepalpha.models.insider import InsiderStatistics, InsiderTrade
 
@@ -9,7 +7,7 @@ class FMPInsiderTradeLoader(AbstractInsiderTradeLoader):
 
     async def get_insider_trades(
         self, symbol: str | None = None, limit: int = 50, page: int = 0
-    ) -> pl.DataFrame:
+    ) -> list[InsiderTrade]:
         """获取内部人交易记录。
 
         Args:
@@ -18,27 +16,35 @@ class FMPInsiderTradeLoader(AbstractInsiderTradeLoader):
             page: 分页索引，默认 0
 
         Returns:
-            内部人交易记录 DataFrame
+            InsiderTrade 领域对象列表
         """
-        if symbol:
-            records = await self._get_list(
-                "/stable/search-insider-trades",
-                symbol=symbol, limit=limit, page=page,
-            )
-        else:
-            records = await self._get_list(
-                "/stable/latest-insider-trade", limit=limit, page=page
-            )
-        return self._to_df(records, InsiderTrade)
+        from deepalpha.providers.fmp.errors import FMPNotFoundError
+        try:
+            if symbol:
+                records = await self._get_list(
+                    "/stable/insider-trades-search",
+                    symbol=symbol, limit=limit, page=page,
+                )
+            else:
+                records = await self._get_list(
+                    "/stable/insider-trades-latest", limit=limit, page=page
+                )
+        except FMPNotFoundError:
+            return []
+        return self._to_models(records, InsiderTrade)
 
-    async def get_insider_statistics(self, symbol: str) -> InsiderStatistics:
-        """获取内部人交易统计数据。
+    async def get_insider_statistics(self, symbol: str) -> list[InsiderStatistics]:
+        """获取内部人交易季度统计数据。
 
         Args:
             symbol: 股票代码
 
         Returns:
-            InsiderStatistics 对象
+            InsiderStatistics 领域对象列表
         """
-        data = await self._get(f"/stable/insider-trade-statistics/{symbol}")
-        return InsiderStatistics.model_validate(data)
+        from deepalpha.providers.fmp.errors import FMPNotFoundError
+        try:
+            records = await self._get_list(f"/stable/insider-trade-statistics/{symbol}")
+        except FMPNotFoundError:
+            return []
+        return self._to_models(records, InsiderStatistics)
