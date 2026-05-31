@@ -105,5 +105,7 @@ class BaseLoader(ABC):  # noqa: B024
         """
         if not records:
             return pl.DataFrame()
-        validated = [model.model_validate(r) for r in records]
+        # FMP 对未填写的日期字段返回空字符串，统一转为 None 再校验
+        clean = [{k: (None if v == "" else v) for k, v in r.items()} for r in records]
+        validated = [model.model_validate(r) for r in clean]
         return pl.DataFrame([v.model_dump() for v in validated])

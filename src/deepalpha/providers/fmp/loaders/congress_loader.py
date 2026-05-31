@@ -26,7 +26,7 @@ class FMPCongressTradeLoader(AbstractCongressTradeLoader):
         Returns:
             国会议员交易数据 DataFrame
         """
-        chamber_prefix = "senate" if chamber == CongressChamber.SENATE else "house-disclosure"
+        chamber_prefix = "senate" if chamber == CongressChamber.SENATE else "house"
         if symbol:
             path = f"/stable/{chamber_prefix}-trading"
             params: dict[str, str | int] = {"symbol": symbol, "limit": limit, "page": page}

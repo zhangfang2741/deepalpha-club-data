@@ -7,7 +7,7 @@ from pydantic.alias_generators import to_camel
 class AnalystRating(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
-    date: datetime.date = Field(title="评级日期", description="分析师发布评级的日期")
+    date: datetime.date | None = Field(None, title="评级日期", description="分析师发布评级的日期")
     rating: str | None = Field(None, title="综合评级", description="综合买卖评级，如 S+、A、B")
     rating_recommendation: str | None = Field(None, title="评级建议", description="Strong Buy / Buy / Hold / Sell")
     rating_score: int | None = Field(None, title="评级分数", description="数值化评级，1=强买 5=强卖")

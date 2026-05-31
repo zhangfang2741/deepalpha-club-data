@@ -34,10 +34,10 @@ class Quote(BaseModel):
 class PriceBar(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
-    date: datetime.date = Field(title="日期", description="K线对应的交易日或时间点")
+    date: datetime.datetime = Field(title="日期", description="K线时间戳：日线为 00:00:00，日内为实际时间")
     open: float = Field(title="开盘价", description="该周期开始价格")
     high: float = Field(title="最高价", description="该周期最高成交价")
     low: float = Field(title="最低价", description="该周期最低成交价")
     close: float = Field(title="收盘价", description="该周期结束价格")
-    volume: int | None = Field(None, title="成交量", description="该周期成交股数")
+    volume: float | None = Field(None, title="成交量", description="该周期成交股数（日内可能为小数）")
     adj_close: float | None = Field(None, title="复权收盘价", description="经分红/拆股调整后的收盘价")
