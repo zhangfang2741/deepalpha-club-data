@@ -1,3 +1,9 @@
+"""
+美国国会议员交易数据模型
+
+基于 STOCK Act 披露的美国国会议员股票交易记录。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -5,6 +11,7 @@ from pydantic.alias_generators import to_camel
 
 
 class CongressTrade(BaseModel):
+    """国会议员交易记录数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     disclosure_date: datetime.date | None = Field(None, title="披露日期", description="议员提交披露的日期")

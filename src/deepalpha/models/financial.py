@@ -1,4 +1,9 @@
-# src/deepalpha/models/financial.py
+"""
+财务报表数据模型
+
+包含利润表、资产负债表、现金流量表等财务数据。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -6,6 +11,7 @@ from pydantic.alias_generators import to_camel
 
 
 class IncomeStatement(BaseModel):
+    """利润表（损益表）数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")
@@ -21,6 +27,7 @@ class IncomeStatement(BaseModel):
 
 
 class BalanceSheet(BaseModel):
+    """资产负债表数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")
@@ -35,6 +42,7 @@ class BalanceSheet(BaseModel):
 
 
 class CashFlow(BaseModel):
+    """现金流量表数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")
@@ -47,6 +55,7 @@ class CashFlow(BaseModel):
 
 
 class FinancialRatio(BaseModel):
+    """财务比率数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")
@@ -62,6 +71,7 @@ class FinancialRatio(BaseModel):
 
 
 class KeyMetrics(BaseModel):
+    """关键财务指标数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")
@@ -76,6 +86,7 @@ class KeyMetrics(BaseModel):
 
 
 class Valuation(BaseModel):
+    """估值数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")

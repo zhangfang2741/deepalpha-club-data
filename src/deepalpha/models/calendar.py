@@ -1,3 +1,10 @@
+
+"""
+日历事件数据模型
+
+包含财报发布、除息分红、IPO、拆股等重要日期事件。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -5,6 +12,7 @@ from pydantic.alias_generators import to_camel
 
 
 class EarningsEvent(BaseModel):
+    """财报发布事件数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     date: datetime.date = Field(title="财报发布日", description="预计或实际财报发布日期")
@@ -15,6 +23,7 @@ class EarningsEvent(BaseModel):
 
 
 class DividendEvent(BaseModel):
+    """股息分红事件数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     date: datetime.date = Field(title="除息日", description="股息除权基准日")
@@ -24,6 +33,7 @@ class DividendEvent(BaseModel):
 
 
 class IPOEvent(BaseModel):
+    """IPO 上市事件数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="拟上市股票代码")
     company: str | None = Field(None, title="公司名称", description="拟上市公司名称")
@@ -34,6 +44,7 @@ class IPOEvent(BaseModel):
 
 
 class SplitEvent(BaseModel):
+    """股票拆分事件数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     date: datetime.date = Field(title="拆股生效日", description="拆/合股正式生效的交易日")

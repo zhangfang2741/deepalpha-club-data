@@ -1,3 +1,9 @@
+"""
+分析师评级与预测数据模型
+
+包含分析师对股票的评级、价格目标、收益预测等数据。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -5,6 +11,7 @@ from pydantic.alias_generators import to_camel
 
 
 class AnalystRating(BaseModel):
+    """分析师综合评级数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     date: datetime.date | None = Field(None, title="评级日期", description="分析师发布评级的日期")
@@ -14,6 +21,7 @@ class AnalystRating(BaseModel):
 
 
 class PriceTarget(BaseModel):
+    """分析师价格目标数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     last_month: float | None = Field(None, title="近月均价目标", description="近一个月分析师目标价均值（美元）")
@@ -23,6 +31,7 @@ class PriceTarget(BaseModel):
 
 
 class Estimate(BaseModel):
+    """分析师收益预测数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     symbol: str = Field(title="股票代码", description="交易所上市代码")
     date: datetime.date = Field(title="预测日期", description="预期数据对应的财报期末日期")

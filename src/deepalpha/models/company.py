@@ -1,4 +1,9 @@
-# src/deepalpha/models/company.py
+"""
+公司基本信息数据模型
+
+包含公司概况、高管信息、市值记录等数据。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -6,6 +11,7 @@ from pydantic.alias_generators import to_camel
 
 
 class CompanyProfile(BaseModel):
+    """公司概况数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")
@@ -23,6 +29,7 @@ class CompanyProfile(BaseModel):
 
 
 class Executive(BaseModel):
+    """公司高管信息数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     name: str = Field(title="姓名", description="高管姓名")
@@ -34,6 +41,7 @@ class Executive(BaseModel):
 
 
 class MarketCapRecord(BaseModel):
+    """市值记录数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码")

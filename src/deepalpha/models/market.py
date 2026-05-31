@@ -1,4 +1,9 @@
-# src/deepalpha/models/market.py
+"""
+市场行情数据模型
+
+包含实时报价、K线数据等市场交易信息。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -6,6 +11,7 @@ from pydantic.alias_generators import to_camel
 
 
 class Quote(BaseModel):
+    """实时行情报价数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     symbol: str = Field(title="股票代码", description="交易所上市代码，如 AAPL")
@@ -32,6 +38,7 @@ class Quote(BaseModel):
 
 
 class PriceBar(BaseModel):
+    """K线（价格柱）数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     date: datetime.datetime = Field(title="日期", description="K线时间戳：日线为 00:00:00，日内为实际时间")

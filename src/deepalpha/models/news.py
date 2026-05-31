@@ -1,3 +1,9 @@
+"""
+新闻数据模型
+
+包含财经新闻文章及其相关元数据。
+"""
+
 import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -5,6 +11,7 @@ from pydantic.alias_generators import to_camel
 
 
 class NewsArticle(BaseModel):
+    """新闻文章数据"""
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
     title: str = Field(title="标题", description="新闻文章标题")
     url: str = Field(title="链接", description="新闻原文 URL")
