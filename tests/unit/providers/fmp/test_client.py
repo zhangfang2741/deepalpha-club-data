@@ -48,3 +48,14 @@ async def test_get_returns_list_unchanged(httpx_mock: HTTPXMock, config):
     async with FMPAsyncClient(config) as client:
         result = await client.get("/stable/quotes-batch")
     assert result == [{"symbol": "AAPL"}, {"symbol": "MSFT"}]
+
+@pytest.mark.asyncio
+async def test_get_retries_on_429_with_retry_after(httpx_mock: HTTPXMock, config):
+    httpx_mock.add_response(
+        status_code=429,
+        headers={"Retry-After": "0"},
+    )
+    httpx_mock.add_response(json={"symbol": "AAPL"})
+    async with FMPAsyncClient(config) as client:
+        result = await client.get("/stable/quote/AAPL")
+    assert result == {"symbol": "AAPL"}

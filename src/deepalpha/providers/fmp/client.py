@@ -7,7 +7,6 @@ from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.errors import (
     FMPAuthError,
     FMPNotFoundError,
-    FMPRateLimitError,
     FMPServerError,
 )
 
