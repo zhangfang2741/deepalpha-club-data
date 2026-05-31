@@ -2,8 +2,6 @@
 
 import datetime
 
-import polars as pl
-
 from deepalpha.loaders.enums import MoverDirection
 from deepalpha.loaders.performance_loader import AbstractMarketPerformanceLoader
 from deepalpha.models.performance import MarketMover, SectorPE, SectorPerformance
@@ -24,7 +22,7 @@ class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
 
     async def get_movers(
         self, direction: MoverDirection, limit: int = 20
-    ) -> pl.DataFrame:
+    ) -> list[MarketMover]:
         """获取市场涨跌幅排行数据。
 
         Args:
@@ -32,13 +30,13 @@ class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
             limit: 排行数据条数，默认 20
 
         Returns:
-            市场涨跌幅排行 DataFrame
+            MarketMover 领域对象列表
         """
         path = _MOVER_PATHS[direction]
         records = await self._get_list(f"/stable/{path}", limit=limit)
-        return self._to_df(records, MarketMover)
+        return self._to_models(records, MarketMover)
 
-    async def get_sector_performance(self, date: datetime.date | None = None) -> pl.DataFrame:
+    async def get_sector_performance(self, date: datetime.date | None = None) -> list[SectorPerformance]:
         """获取板块表现数据。
 
         date=None 时使用今日日期，FMP Start 不支持历史日期（premium only）。
@@ -47,15 +45,15 @@ class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
             date: 查询日期，默认为今日
 
         Returns:
-            板块表现数据 DataFrame
+            SectorPerformance 领域对象列表
         """
         query_date = date or datetime.date.today()
         records = await self._get_list(
             "/stable/sector-performance-snapshot", date=str(query_date)
         )
-        return self._to_df(records, SectorPerformance)
+        return self._to_models(records, SectorPerformance)
 
-    async def get_sector_pe(self, date: datetime.date | None = None) -> pl.DataFrame:
+    async def get_sector_pe(self, date: datetime.date | None = None) -> list[SectorPE]:
         """获取板块市盈率数据。
 
         date=None 时使用今日日期，FMP Start 不支持历史日期（premium only）。
@@ -64,10 +62,10 @@ class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
             date: 查询日期，默认为今日
 
         Returns:
-            板块市盈率数据 DataFrame
+            SectorPE 领域对象列表
         """
         query_date = date or datetime.date.today()
         records = await self._get_list(
             "/stable/sector-pe-snapshot", date=str(query_date)
         )
-        return self._to_df(records, SectorPE)
+        return self._to_models(records, SectorPE)
