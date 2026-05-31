@@ -1,10 +1,9 @@
 import datetime
 from abc import abstractmethod
 
-import polars as pl
-
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.loaders.enums import AssetClass
+from deepalpha.models.news import NewsArticle
 
 
 class AbstractNewsLoader(BaseLoader):
@@ -16,4 +15,4 @@ class AbstractNewsLoader(BaseLoader):
         limit: int = 20,
         start: datetime.date | None = None,
         end: datetime.date | None = None,
-    ) -> pl.DataFrame: ...
+    ) -> list[NewsArticle]: ...

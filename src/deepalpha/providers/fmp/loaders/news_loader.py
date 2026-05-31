@@ -3,8 +3,6 @@
 import datetime
 from typing import Any
 
-import polars as pl
-
 from deepalpha.loaders.enums import AssetClass
 from deepalpha.loaders.news_loader import AbstractNewsLoader
 from deepalpha.models.news import NewsArticle
@@ -29,13 +27,13 @@ class FMPNewsLoader(AbstractNewsLoader):
         limit: int = 20,
         start: datetime.date | None = None,
         end: datetime.date | None = None,
-    ) -> pl.DataFrame:
+    ) -> list[NewsArticle]:
         """获取新闻数据。
 
         根据不同的查询条件调用相应的 API 端点：
         - 如果提供 symbols，查询指定股票的新闻（/stable/news/stock）
         - 如果提供 asset_class（CRYPTO、FOREX），查询特定资产类别的新闻
-        - 否则查询通用新闻（/stable/news/general）
+        - 否则查询通用新闻（/stable/fmp-articles）
 
         Args:
             symbols: 股票代码列表（可选）
@@ -45,7 +43,7 @@ class FMPNewsLoader(AbstractNewsLoader):
             end: 结束日期（可选）
 
         Returns:
-            新闻数据 DataFrame
+            NewsArticle 领域对象列表
         """
         params: dict[str, Any] = {"limit": limit}
         if start:
@@ -59,7 +57,12 @@ class FMPNewsLoader(AbstractNewsLoader):
         elif asset_class and asset_class in _ASSET_CLASS_PATHS:
             path = f"/stable/{_ASSET_CLASS_PATHS[asset_class]}"
         else:
-            path = "/stable/news/general"
+            path = "/stable/fmp-articles"
 
         records = await self._get_list(path, **params)
-        return self._to_df(records, NewsArticle)
+        if path == "/stable/fmp-articles":
+            for r in records:
+                r.setdefault("url", r.pop("link", ""))
+                r.setdefault("publishedDate", r.pop("date", None))
+                r.setdefault("text", r.pop("content", None))
+        return self._to_models(records, NewsArticle)
