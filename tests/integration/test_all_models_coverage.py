@@ -5,11 +5,18 @@
 """
 import datetime
 
-import polars as pl
 import pytest
 
 from deepalpha import FMPDataHub
-from deepalpha.loaders.enums import AssetClass, CongressChamber, IndicatorType, Interval, StatementPeriod
+from deepalpha.loaders.base import BaseLoader
+from deepalpha.loaders.enums import (
+    AssetClass,
+    CongressChamber,
+    IndicatorType,
+    Interval,
+    MoverDirection,
+    StatementPeriod,
+)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -22,13 +29,11 @@ from deepalpha.loaders.enums import AssetClass, CongressChamber, IndicatorType, 
 async def test_analyst_rating_model():
     """测试 AnalystRating 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.analyst.get_ratings("AAPL")
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 AnalystRating 字段
+        result = await hub.analyst.get_ratings("AAPL")
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
-        assert df["symbol"].dtype == pl.String
-        # 其他字段（可能为 None）
         expected_cols = ["date", "rating", "rating_recommendation", "rating_score"]
         for col in expected_cols:
             assert col in df.columns, f"缺少字段: {col}"
@@ -41,10 +46,10 @@ async def test_analyst_rating_model():
 async def test_price_target_model():
     """测试 PriceTarget 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.analyst.get_price_targets("AAPL")
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 PriceTarget 字段
+        result = await hub.analyst.get_price_targets("AAPL")
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         expected_cols = ["last_month", "last_quarter", "last_year", "all_time"]
         for col in expected_cols:
@@ -58,10 +63,10 @@ async def test_price_target_model():
 async def test_estimate_model():
     """测试 Estimate 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.analyst.get_estimates("AAPL", period=StatementPeriod.ANNUAL)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 Estimate 字段
+        result = await hub.analyst.get_estimates("AAPL", period=StatementPeriod.ANNUAL)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         assert "date" in df.columns
         expected_cols = ["estimated_revenue_avg", "estimated_eps_avg", "number_analyst_estimated_revenue"]
@@ -82,10 +87,10 @@ async def test_earnings_event_model():
     """测试 EarningsEvent 模型的所有字段"""
     start, end = datetime.date(2026, 5, 1), datetime.date(2026, 7, 31)
     async with FMPDataHub() as hub:
-        df = await hub.calendar.get_earnings_calendar(start, end)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 EarningsEvent 字段
+        result = await hub.calendar.get_earnings_calendar(start, end)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         assert "date" in df.columns
         expected_cols = ["eps", "eps_estimated", "time", "revenue_estimated"]
@@ -101,10 +106,10 @@ async def test_dividend_event_model():
     """测试 DividendEvent 模型的所有字段"""
     start, end = datetime.date(2026, 5, 1), datetime.date(2026, 7, 31)
     async with FMPDataHub() as hub:
-        df = await hub.calendar.get_dividend_calendar(start, end)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 DividendEvent 字段
+        result = await hub.calendar.get_dividend_calendar(start, end)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         assert "date" in df.columns
         expected_cols = ["dividend", "record_date", "payment_date"]
@@ -120,10 +125,10 @@ async def test_ipo_event_model():
     """测试 IPOEvent 模型的所有字段"""
     start, end = datetime.date(2026, 5, 1), datetime.date(2026, 12, 31)
     async with FMPDataHub() as hub:
-        df = await hub.calendar.get_ipo_calendar(start, end)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 IPOEvent 字段
+        result = await hub.calendar.get_ipo_calendar(start, end)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         assert "date" in df.columns
         expected_cols = ["company", "exchange", "price_range", "shares"]
@@ -139,10 +144,10 @@ async def test_split_event_model():
     """测试 SplitEvent 模型的所有字段"""
     start, end = datetime.date(2020, 1, 1), datetime.date(2026, 12, 31)
     async with FMPDataHub() as hub:
-        df = await hub.calendar.get_splits_calendar(start, end)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 SplitEvent 字段
+        result = await hub.calendar.get_splits_calendar(start, end)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         assert "date" in df.columns
         expected_cols = ["numerator", "denominator"]
@@ -164,12 +169,10 @@ async def test_company_profile_model():
     async with FMPDataHub() as hub:
         profile = await hub.company.get_profile("AAPL")
     assert profile.symbol == "AAPL"
-    # 验证 CompanyProfile 核心字段
     assert profile.company_name is not None
-    assert profile.exchange is not None  # 如 NASDAQ, NYSE
+    assert profile.exchange is not None
     assert profile.industry is not None
     assert profile.sector is not None
-    # 额外字段
     assert hasattr(profile, "description")
     assert hasattr(profile, "website")
     assert hasattr(profile, "full_time_employees")
@@ -188,10 +191,10 @@ async def test_company_profile_model():
 async def test_executive_model():
     """测试 Executive 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.company.get_executives("AAPL")
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 Executive 字段
+        result = await hub.company.get_executives("AAPL")
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "name" in df.columns
         assert "title" in df.columns
         expected_cols = ["pay", "currency_of_pay", "gender", "year_born"]
@@ -206,10 +209,10 @@ async def test_executive_model():
 async def test_market_cap_record_model():
     """测试 MarketCapRecord 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.company.get_market_cap("AAPL")
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 MarketCapRecord 字段
+        result = await hub.company.get_market_cap("AAPL")
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         assert "date" in df.columns
         assert "market_cap" in df.columns
@@ -228,10 +231,10 @@ async def test_market_cap_record_model():
 async def test_congress_trade_model():
     """测试 CongressTrade 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.congress.get_congress_trades(chamber=CongressChamber.SENATE, limit=10)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 CongressTrade 字段
+        result = await hub.congress.get_congress_trades(chamber=CongressChamber.SENATE, limit=10)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         expected_cols = [
             "disclosure_date", "transaction_date", "first_name", "last_name",
@@ -254,10 +257,10 @@ async def test_congress_trade_model():
 async def test_symbol_info_model():
     """测试 SymbolInfo 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.directory.get_symbols(AssetClass.STOCK)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 SymbolInfo 字段
+        result = await hub.directory.get_symbols(AssetClass.STOCK)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     expected_cols = ["name", "exchange", "exchange_short_name", "type"]
     for col in expected_cols:
@@ -271,10 +274,10 @@ async def test_symbol_info_model():
 async def test_exchange_info_model():
     """测试 ExchangeInfo 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.directory.get_exchanges()
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 ExchangeInfo 字段
+        result = await hub.directory.get_exchanges()
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "exchange" in df.columns
         expected_cols = ["name", "country", "currency"]
         for col in expected_cols:
@@ -293,10 +296,10 @@ async def test_exchange_info_model():
 async def test_sec_filing_model():
     """测试 SecFiling 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.filings.get_filings(symbol="AAPL", form_type="10-K", limit=5)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 SecFiling 字段
+        result = await hub.filings.get_filings(symbol="AAPL", form_type="10-K", limit=5)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         expected_cols = ["filing_date", "accepted_date", "form_type", "link", "final_link"]
         for col in expected_cols:
@@ -312,10 +315,8 @@ async def test_sec_company_profile_model():
     async with FMPDataHub() as hub:
         profile = await hub.filings.get_sec_profile("AAPL")
     assert profile.symbol == "AAPL"
-    # 验证 SecCompanyProfile 核心字段
     assert profile.cik is not None
     assert profile.company_name is not None
-    # 额外字段
     assert hasattr(profile, "sic")
     assert hasattr(profile, "state_of_incorporation")
     assert hasattr(profile, "fiscal_year_end")
@@ -336,10 +337,10 @@ async def test_sec_company_profile_model():
 async def test_income_statement_model():
     """测试 IncomeStatement 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.financial.get_income_statement("AAPL", limit=2)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 IncomeStatement 字段
+        result = await hub.financial.get_income_statement("AAPL", limit=2)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     assert "date" in df.columns
     assert "period" in df.columns
@@ -355,10 +356,10 @@ async def test_income_statement_model():
 async def test_balance_sheet_model():
     """测试 BalanceSheet 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.financial.get_balance_sheet("AAPL", limit=2)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 BalanceSheet 字段
+        result = await hub.financial.get_balance_sheet("AAPL", limit=2)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     assert "date" in df.columns
     assert "period" in df.columns
@@ -377,10 +378,10 @@ async def test_balance_sheet_model():
 async def test_cash_flow_model():
     """测试 CashFlow 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.financial.get_cash_flow_statement("AAPL", limit=2)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 CashFlow 字段
+        result = await hub.financial.get_cash_flow_statement("AAPL", limit=2)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     assert "date" in df.columns
     assert "period" in df.columns
@@ -396,10 +397,10 @@ async def test_cash_flow_model():
 async def test_financial_ratio_model():
     """测试 FinancialRatio 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.financial.get_financial_ratios("AAPL", limit=2)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 FinancialRatio 字段
+        result = await hub.financial.get_financial_ratios("AAPL", limit=2)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     assert "date" in df.columns
     assert "period" in df.columns
@@ -418,10 +419,10 @@ async def test_financial_ratio_model():
 async def test_key_metrics_model():
     """测试 KeyMetrics 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.financial.get_key_metrics("AAPL", limit=2)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 KeyMetrics 字段
+        result = await hub.financial.get_key_metrics("AAPL", limit=2)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     assert "date" in df.columns
     assert "period" in df.columns
@@ -441,7 +442,6 @@ async def test_valuation_model():
     """测试 Valuation 模型的所有字段"""
     async with FMPDataHub() as hub:
         valuation = await hub.financial.get_valuation("AAPL")
-    # 验证 Valuation 字段
     assert valuation.symbol == "AAPL"
     assert valuation.dcf is not None and valuation.dcf > 0
     assert valuation.stock_price is not None and valuation.stock_price > 0
@@ -460,10 +460,10 @@ async def test_indicator_row_model():
     """测试 IndicatorRow 模型的所有字段"""
     start, end = datetime.date(2025, 1, 1), datetime.date(2025, 3, 31)
     async with FMPDataHub() as hub:
-        df = await hub.indicators.get_indicator("AAPL", IndicatorType.SMA, period=20, start=start, end=end)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 IndicatorRow 字段
+        result = await hub.indicators.get_indicator("AAPL", IndicatorType.SMA, period=20, start=start, end=end)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "date" in df.columns
     assert "value" in df.columns
     expected_cols = ["open", "high", "low", "close", "volume"]
@@ -483,10 +483,10 @@ async def test_indicator_row_model():
 async def test_insider_trade_model():
     """测试 InsiderTrade 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.insider.get_insider_trades(symbol="AAPL", limit=10)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 InsiderTrade 字段
+        result = await hub.insider.get_insider_trades(symbol="AAPL", limit=10)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         expected_cols = [
             "filing_date", "transaction_date", "reporting_name", "security_name",
@@ -504,10 +504,10 @@ async def test_insider_trade_model():
 async def test_insider_statistics_model():
     """测试 InsiderStatistics 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.insider.get_insider_statistics("AAPL")
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 InsiderStatistics 字段
+        result = await hub.insider.get_insider_statistics("AAPL")
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "symbol" in df.columns
         expected_cols = [
             "year", "quarter", "acquired_transactions", "disposed_transactions",
@@ -532,7 +532,6 @@ async def test_quote_model():
         quote = await hub.market.get_quote("AAPL")
     assert quote.symbol == "AAPL"
     assert quote.price > 0
-    # 验证 Quote 核心字段
     assert hasattr(quote, "name")
     assert hasattr(quote, "change")
     assert hasattr(quote, "changes_percentage")
@@ -559,14 +558,14 @@ async def test_quote_model():
 async def test_price_bar_model():
     """测试 PriceBar 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.market.get_price_history(
+        result = await hub.market.get_price_history(
             "AAPL",
             start=datetime.date(2025, 1, 1),
             end=datetime.date(2025, 1, 10)
         )
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 PriceBar 字段
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "date" in df.columns
     assert "open" in df.columns
     assert "high" in df.columns
@@ -588,10 +587,10 @@ async def test_price_bar_model():
 async def test_news_article_model():
     """测试 NewsArticle 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.news.get_news(symbols=["AAPL"], limit=5)
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 NewsArticle 字段
+        result = await hub.news.get_news(symbols=["AAPL"], limit=5)
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "title" in df.columns
         assert "url" in df.columns
         expected_cols = ["published_date", "site", "text", "symbol", "sentiment"]
@@ -611,10 +610,10 @@ async def test_news_article_model():
 async def test_market_mover_model():
     """测试 MarketMover 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.performance.get_movers(MoverDirection.GAINERS, limit=5)
-    assert isinstance(df, pl.DataFrame)
-    assert len(df) > 0
-    # 验证 MarketMover 字段
+        result = await hub.performance.get_movers(MoverDirection.GAINERS, limit=5)
+    assert isinstance(result, list)
+    assert len(result) > 0
+    df = BaseLoader.to_dataframe(result)
     assert "symbol" in df.columns
     assert "name" in df.columns
     expected_cols = ["change", "price", "changes_percentage", "volume"]
@@ -629,10 +628,10 @@ async def test_market_mover_model():
 async def test_sector_performance_model():
     """测试 SectorPerformance 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.performance.get_sector_performance()
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 SectorPerformance 字段
+        result = await hub.performance.get_sector_performance()
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "sector" in df.columns
         assert "changes_percentage" in df.columns
         print(f"\nSectorPerformance 字段验证通过: {list(df.columns)}")
@@ -644,10 +643,10 @@ async def test_sector_performance_model():
 async def test_sector_pe_model():
     """测试 SectorPE 模型的所有字段"""
     async with FMPDataHub() as hub:
-        df = await hub.performance.get_sector_pe()
-    assert isinstance(df, pl.DataFrame)
-    if len(df) > 0:
-        # 验证 SectorPE 字段
+        result = await hub.performance.get_sector_pe()
+    assert isinstance(result, list)
+    if len(result) > 0:
+        df = BaseLoader.to_dataframe(result)
         assert "date" in df.columns
         assert "sector" in df.columns
         assert "pe" in df.columns
