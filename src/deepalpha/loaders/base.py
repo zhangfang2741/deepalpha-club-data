@@ -128,8 +128,4 @@ class BaseLoader(ABC):  # noqa: B024
         self, records: list[dict[str, Any]], model: type[BaseModel]
     ) -> pl.DataFrame:
         """已废弃：请使用 _to_models() + to_dataframe()。保留以兼容迁移期间的旧调用。"""
-        if not records:
-            return pl.DataFrame()
-        clean = [{k: (None if v == "" else v) for k, v in r.items()} for r in records]
-        validated = [model.model_validate(r) for r in clean]
-        return pl.DataFrame([v.model_dump() for v in validated])
+        return self.to_dataframe(self._to_models(records, model))
