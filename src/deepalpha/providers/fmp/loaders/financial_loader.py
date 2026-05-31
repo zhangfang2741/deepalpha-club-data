@@ -2,8 +2,6 @@
 
 from typing import Any
 
-import polars as pl
-
 from deepalpha.loaders.enums import StatementPeriod
 from deepalpha.loaders.financial_loader import AbstractFinancialLoader
 from deepalpha.models.financial import (
@@ -29,7 +27,7 @@ class FMPFinancialLoader(AbstractFinancialLoader):
         symbol: str,
         period: StatementPeriod = StatementPeriod.ANNUAL,
         limit: int = 5,
-    ) -> pl.DataFrame:
+    ) -> list[IncomeStatement]:
         """获取收入声明（损益表）。
 
         Args:
@@ -38,18 +36,18 @@ class FMPFinancialLoader(AbstractFinancialLoader):
             limit: 返回记录数
 
         Returns:
-            包含收入数据的 Polars DataFrame
+            IncomeStatement 领域对象列表
         """
         params: dict[str, Any] = {"symbol": symbol, "period": period.value, "limit": limit}
         records = await self._get_list("/stable/income-statement", **params)
-        return self._to_df(records, IncomeStatement)
+        return self._to_models(records, IncomeStatement)
 
     async def get_balance_sheet(
         self,
         symbol: str,
         period: StatementPeriod = StatementPeriod.ANNUAL,
         limit: int = 5,
-    ) -> pl.DataFrame:
+    ) -> list[BalanceSheet]:
         """获取资产负债表。
 
         Args:
@@ -58,18 +56,18 @@ class FMPFinancialLoader(AbstractFinancialLoader):
             limit: 返回记录数
 
         Returns:
-            包含资产负债表数据的 Polars DataFrame
+            BalanceSheet 领域对象列表
         """
         params: dict[str, Any] = {"symbol": symbol, "period": period.value, "limit": limit}
         records = await self._get_list("/stable/balance-sheet-statement", **params)
-        return self._to_df(records, BalanceSheet)
+        return self._to_models(records, BalanceSheet)
 
     async def get_cash_flow_statement(
         self,
         symbol: str,
         period: StatementPeriod = StatementPeriod.ANNUAL,
         limit: int = 5,
-    ) -> pl.DataFrame:
+    ) -> list[CashFlow]:
         """获取现金流量表。
 
         Args:
@@ -78,18 +76,18 @@ class FMPFinancialLoader(AbstractFinancialLoader):
             limit: 返回记录数
 
         Returns:
-            包含现金流数据的 Polars DataFrame
+            CashFlow 领域对象列表
         """
         params: dict[str, Any] = {"symbol": symbol, "period": period.value, "limit": limit}
         records = await self._get_list("/stable/cash-flow-statement", **params)
-        return self._to_df(records, CashFlow)
+        return self._to_models(records, CashFlow)
 
     async def get_financial_ratios(
         self,
         symbol: str,
         period: StatementPeriod = StatementPeriod.ANNUAL,
         limit: int = 5,
-    ) -> pl.DataFrame:
+    ) -> list[FinancialRatio]:
         """获取财务比率。
 
         Args:
@@ -98,18 +96,18 @@ class FMPFinancialLoader(AbstractFinancialLoader):
             limit: 返回记录数
 
         Returns:
-            包含财务比率数据的 Polars DataFrame
+            FinancialRatio 领域对象列表
         """
         params: dict[str, Any] = {"symbol": symbol, "period": period.value, "limit": limit}
         records = await self._get_list("/stable/ratios", **params)
-        return self._to_df(records, FinancialRatio)
+        return self._to_models(records, FinancialRatio)
 
     async def get_key_metrics(
         self,
         symbol: str,
         period: StatementPeriod = StatementPeriod.ANNUAL,
         limit: int = 5,
-    ) -> pl.DataFrame:
+    ) -> list[KeyMetrics]:
         """获取关键指标。
 
         Args:
@@ -118,11 +116,11 @@ class FMPFinancialLoader(AbstractFinancialLoader):
             limit: 返回记录数
 
         Returns:
-            包含关键指标数据的 Polars DataFrame
+            KeyMetrics 领域对象列表
         """
         params: dict[str, Any] = {"symbol": symbol, "period": period.value, "limit": limit}
         records = await self._get_list("/stable/key-metrics", **params)
-        return self._to_df(records, KeyMetrics)
+        return self._to_models(records, KeyMetrics)
 
     async def get_valuation(self, symbol: str) -> Valuation:
         """获取公司估值。
