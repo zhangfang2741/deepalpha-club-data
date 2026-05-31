@@ -316,14 +316,14 @@ async def test_sec_company_profile_model():
         profile = await hub.filings.get_sec_profile("AAPL")
     assert profile.symbol == "AAPL"
     assert profile.cik is not None
-    assert profile.company_name is not None
-    assert hasattr(profile, "sic")
-    assert hasattr(profile, "state_of_incorporation")
-    assert hasattr(profile, "fiscal_year_end")
+    assert profile.registrant_name is not None
+    assert hasattr(profile, "sic_code")
+    assert hasattr(profile, "sic_description")
+    assert hasattr(profile, "sic_group")
     print(f"\nSecCompanyProfile 字段验证通过:")
     print(f"  symbol: {profile.symbol}, cik: {profile.cik}")
-    print(f"  company_name: {profile.company_name}, sic: {profile.sic}")
-    print(f"  state_of_incorporation: {profile.state_of_incorporation}")
+    print(f"  registrant_name: {profile.registrant_name}, sic_code: {profile.sic_code}")
+    print(f"  sic_description: {profile.sic_description}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
