@@ -1,10 +1,9 @@
 import datetime
 from abc import abstractmethod
 
-import polars as pl
-
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.loaders.enums import IndicatorType, Interval
+from deepalpha.models.indicators import IndicatorRow
 
 
 class AbstractTechnicalIndicatorLoader(BaseLoader):
@@ -17,4 +16,4 @@ class AbstractTechnicalIndicatorLoader(BaseLoader):
         interval: Interval = Interval.ONE_DAY,
         start: datetime.date | None = None,
         end: datetime.date | None = None,
-    ) -> pl.DataFrame: ...
+    ) -> list[IndicatorRow]: ...
