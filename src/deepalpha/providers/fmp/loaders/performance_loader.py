@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.performance import AbstractMarketPerformanceLoader
+from deepalpha.loaders.performance_loader import AbstractMarketPerformanceLoader
 from deepalpha.loaders.enums import MoverDirection
 from deepalpha.models.performance import MarketMover, SectorPerformance, SectorPE
 

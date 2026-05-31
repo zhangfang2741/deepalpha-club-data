@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.indicators import AbstractTechnicalIndicatorLoader
+from deepalpha.loaders.indicators_loader import AbstractTechnicalIndicatorLoader
 from deepalpha.loaders.enums import IndicatorType, Interval
 from deepalpha.models.indicators import IndicatorRow
 from deepalpha.providers.fmp.errors import FMPError

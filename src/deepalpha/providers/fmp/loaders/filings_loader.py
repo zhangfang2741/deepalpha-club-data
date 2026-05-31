@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.filings import AbstractSecFilingLoader
+from deepalpha.loaders.filings_loader import AbstractSecFilingLoader
 from deepalpha.models.filings import SecFiling, SecCompanyProfile
 
 

@@ -3,7 +3,7 @@ import polars as pl
 from pytest_httpx import HTTPXMock
 from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.loaders.performance import FMPMarketPerformanceLoader
+from deepalpha.providers.fmp.loaders.performance_loader import FMPMarketPerformanceLoader
 from deepalpha.loaders.enums import MoverDirection
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.company import AbstractCompanyLoader
+from deepalpha.loaders.company_loader import AbstractCompanyLoader
 from deepalpha.models.company import CompanyProfile, Executive, MarketCapRecord
 
 

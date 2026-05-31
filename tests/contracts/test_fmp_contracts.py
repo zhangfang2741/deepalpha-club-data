@@ -1,5 +1,5 @@
 # tests/contracts/test_fmp_contracts.py
-from deepalpha.loaders.market import AbstractMarketLoader
+from deepalpha.loaders.market_loader import AbstractMarketLoader
 from deepalpha.loaders.hub import AbstractDataHub
 from deepalpha.providers.fmp import FMPDataHub
 from deepalpha.providers.fmp.config import FMPConfig

@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.news import AbstractNewsLoader
+from deepalpha.loaders.news_loader import AbstractNewsLoader
 from deepalpha.loaders.enums import AssetClass
 from deepalpha.models.news import NewsArticle
 

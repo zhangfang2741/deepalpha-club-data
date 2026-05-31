@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.calendar import AbstractCalendarLoader
+from deepalpha.loaders.calendar_loader import AbstractCalendarLoader
 from deepalpha.models.calendar import EarningsEvent, DividendEvent, IPOEvent, SplitEvent
 
 

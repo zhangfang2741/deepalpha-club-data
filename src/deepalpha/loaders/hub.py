@@ -1,11 +1,11 @@
 # src/deepalpha/loaders/hub.py
 from typing import Protocol, runtime_checkable
-from deepalpha.loaders.market import AbstractMarketLoader
-from deepalpha.loaders.financial import AbstractFinancialLoader
-from deepalpha.loaders.company import AbstractCompanyLoader
-from deepalpha.loaders.analyst import AbstractAnalystLoader
-from deepalpha.loaders.calendar import AbstractCalendarLoader
-from deepalpha.loaders.news import AbstractNewsLoader
+from deepalpha.loaders.market_loader import AbstractMarketLoader
+from deepalpha.loaders.financial_loader import AbstractFinancialLoader
+from deepalpha.loaders.company_loader import AbstractCompanyLoader
+from deepalpha.loaders.analyst_loader import AbstractAnalystLoader
+from deepalpha.loaders.calendar_loader import AbstractCalendarLoader
+from deepalpha.loaders.news_loader import AbstractNewsLoader
 
 @runtime_checkable
 class AbstractDataHub(Protocol):

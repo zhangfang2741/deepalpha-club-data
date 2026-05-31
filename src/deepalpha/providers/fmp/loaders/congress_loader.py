@@ -1,5 +1,5 @@
 import polars as pl
-from deepalpha.loaders.congress import AbstractCongressTradeLoader
+from deepalpha.loaders.congress_loader import AbstractCongressTradeLoader
 from deepalpha.loaders.enums import CongressChamber
 from deepalpha.models.congress import CongressTrade
 

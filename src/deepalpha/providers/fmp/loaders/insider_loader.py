@@ -1,5 +1,5 @@
 import polars as pl
-from deepalpha.loaders.insider import AbstractInsiderTradeLoader
+from deepalpha.loaders.insider_loader import AbstractInsiderTradeLoader
 from deepalpha.models.insider import InsiderTrade, InsiderStatistics
 
 

@@ -1,6 +1,6 @@
 import datetime
 import polars as pl
-from deepalpha.loaders.market import AbstractMarketLoader
+from deepalpha.loaders.market_loader import AbstractMarketLoader
 from deepalpha.loaders.enums import AssetClass, Interval
 from deepalpha.models.market import Quote, PriceBar
 

@@ -1,7 +1,7 @@
 """FMP 财务数据加载器实现"""
 
 import polars as pl
-from deepalpha.loaders.financial import AbstractFinancialLoader
+from deepalpha.loaders.financial_loader import AbstractFinancialLoader
 from deepalpha.loaders.enums import StatementPeriod
 from deepalpha.models.financial import (
     IncomeStatement,

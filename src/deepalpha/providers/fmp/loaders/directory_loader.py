@@ -1,5 +1,5 @@
 import polars as pl
-from deepalpha.loaders.directory import AbstractDirectoryLoader
+from deepalpha.loaders.directory_loader import AbstractDirectoryLoader
 from deepalpha.loaders.enums import AssetClass
 from deepalpha.models.directory import SymbolInfo, ExchangeInfo
 

@@ -3,7 +3,7 @@ import polars as pl
 from pytest_httpx import HTTPXMock
 from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.loaders.indicators import FMPTechnicalIndicatorLoader
+from deepalpha.providers.fmp.loaders.indicators_loader import FMPTechnicalIndicatorLoader
 from deepalpha.providers.fmp.errors import FMPError
 from deepalpha.loaders.enums import IndicatorType, Interval
 

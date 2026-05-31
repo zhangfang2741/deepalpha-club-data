@@ -3,7 +3,7 @@ import polars as pl
 from pytest_httpx import HTTPXMock
 from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.loaders.filings import FMPSecFilingLoader
+from deepalpha.providers.fmp.loaders.filings_loader import FMPSecFilingLoader
 from deepalpha.models.filings import SecCompanyProfile
 
 @pytest.fixture

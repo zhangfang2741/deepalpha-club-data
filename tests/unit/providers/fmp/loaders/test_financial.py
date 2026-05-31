@@ -5,7 +5,7 @@ import polars as pl
 from pytest_httpx import HTTPXMock
 from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.loaders.financial import FMPFinancialLoader
+from deepalpha.providers.fmp.loaders.financial_loader import FMPFinancialLoader
 from deepalpha.models.financial import Valuation
 from deepalpha.loaders.enums import StatementPeriod
 
