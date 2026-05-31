@@ -19,7 +19,9 @@ dependencies = [
     "lxml",
     "notebook>=7.5.6",
     "requests-cache>=1.2.0",
-    "requests-ratelimiter"
+    "requests-ratelimiter",
+    "asyncpg>=0.29.0",
+    "valkey>=6.0.0",
 ]
 
 [project.optional-dependencies]
