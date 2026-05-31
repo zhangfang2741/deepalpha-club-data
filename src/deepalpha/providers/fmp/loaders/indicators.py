@@ -18,6 +18,13 @@ _FMP_INDICATOR_PATHS: dict[IndicatorType, str] = {
 }
 
 class FMPTechnicalIndicatorLoader(AbstractTechnicalIndicatorLoader):
+    """FMP Start 会员技术指标加载器。
+
+    支持的指标（9 种）：SMA, EMA, DEMA, TEMA, WMA, RSI, ADX, WILLIAMS, STD_DEV。
+    不支持的指标（需 Alpha Vantage 等 provider）：MACD, STOCH, CCI, AROON, BBANDS, ATR, OBV。
+    调用不支持的指标会抛出 FMPError。
+    """
+
     async def get_indicator(
         self,
         symbol: str,

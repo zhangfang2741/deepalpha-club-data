@@ -7,6 +7,7 @@ from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.errors import (
     FMPAuthError,
     FMPNotFoundError,
+    FMPRateLimitError,
     FMPServerError,
 )
 
@@ -23,11 +24,15 @@ class FMPAsyncClient:
     async def get(self, path: str, **params: Any) -> Any:
         params["apikey"] = self._config.api_key
         delay = 1.0
+        rate_limit_count = 0
         for attempt in range(self._config.max_retries + 1):
             response = await self._http.get(path, params=params)
             if response.status_code == 401:
                 raise FMPAuthError("API Key 无效或过期")
             if response.status_code == 429:
+                rate_limit_count += 1
+                if rate_limit_count > self._config.max_retries:
+                    raise FMPRateLimitError(f"速率限制，已重试 {rate_limit_count} 次: {path}")
                 wait = float(response.headers.get("Retry-After", delay))
                 await asyncio.sleep(wait)
                 continue
