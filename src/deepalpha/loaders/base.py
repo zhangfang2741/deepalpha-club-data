@@ -1,8 +1,11 @@
 from abc import ABC
-from typing import Any, Protocol, cast, runtime_checkable
+from collections.abc import Sequence
+from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 
 import polars as pl
 from pydantic import BaseModel
+
+M = TypeVar("M", bound=BaseModel)
 
 
 @runtime_checkable
@@ -89,23 +92,44 @@ class BaseLoader(ABC):  # noqa: B024
             return result
         return [result]
 
-    def _to_df(
-        self, records: list[dict[str, Any]], model: type[BaseModel]
-    ) -> pl.DataFrame:
-        """将记录列表转换为 Polars DataFrame。
-
-        先通过 Pydantic 模型验证每条记录，然后转换为 DataFrame。
+    def _to_models(
+        self, records: list[dict[str, Any]], model: type[M]
+    ) -> list[M]:
+        """将记录字典列表验证为领域对象列表。
 
         Args:
             records: 记录字典列表
             model: 用于验证的 Pydantic 模型
 
         Returns:
-            验证后的 Polars DataFrame；如果记录为空，返回空 DataFrame
+            验证后的领域对象列表；如果记录为空，返回空列表
+        """
+        if not records:
+            return []
+        # FMP 对未填写的日期字段返回空字符串，统一转为 None 再校验
+        clean = [{k: (None if v == "" else v) for k, v in r.items()} for r in records]
+        return [model.model_validate(r) for r in clean]
+
+    @staticmethod
+    def to_dataframe(records: Sequence[BaseModel]) -> pl.DataFrame:
+        """将领域对象序列转换为 Polars DataFrame。
+
+        Args:
+            records: 领域对象序列（list 或 tuple）
+
+        Returns:
+            Polars DataFrame；如果序列为空，返回空 DataFrame
         """
         if not records:
             return pl.DataFrame()
-        # FMP 对未填写的日期字段返回空字符串，统一转为 None 再校验
+        return pl.DataFrame([r.model_dump() for r in records])
+
+    def _to_df(
+        self, records: list[dict[str, Any]], model: type[BaseModel]
+    ) -> pl.DataFrame:
+        """已废弃：请使用 _to_models() + to_dataframe()。保留以兼容迁移期间的旧调用。"""
+        if not records:
+            return pl.DataFrame()
         clean = [{k: (None if v == "" else v) for k, v in r.items()} for r in records]
         validated = [model.model_validate(r) for r in clean]
         return pl.DataFrame([v.model_dump() for v in validated])
