@@ -124,8 +124,3 @@ class BaseLoader(ABC):  # noqa: B024
             return pl.DataFrame()
         return pl.DataFrame([r.model_dump() for r in records])
 
-    def _to_df(
-        self, records: list[dict[str, Any]], model: type[BaseModel]
-    ) -> pl.DataFrame:
-        """已废弃：请使用 _to_models() + to_dataframe()。保留以兼容迁移期间的旧调用。"""
-        return self.to_dataframe(self._to_models(records, model))

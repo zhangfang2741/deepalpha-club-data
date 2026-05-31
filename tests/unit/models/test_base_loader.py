@@ -44,11 +44,3 @@ async def test_get_list_returns_list():
     assert result == [{"value": 1}, {"value": 2}]
 
 
-def test_to_df_validates_and_returns_dataframe():
-    import polars as pl
-
-    client = FakeClient(None)
-    loader = ConcreteLoader(client)
-    df = loader._to_df([{"value": 10}, {"value": 20}], SimpleModel)
-    assert isinstance(df, pl.DataFrame)
-    assert df["value"].to_list() == [10, 20]
