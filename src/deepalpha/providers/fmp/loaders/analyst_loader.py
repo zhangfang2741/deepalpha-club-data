@@ -1,3 +1,7 @@
+"""FMP 分析师数据加载器实现"""
+
+from typing import Any
+
 import polars as pl
 
 from deepalpha.loaders.analyst_loader import AbstractAnalystLoader
@@ -6,7 +10,11 @@ from deepalpha.models.analyst import AnalystRating, Estimate, PriceTarget
 
 
 class FMPAnalystLoader(AbstractAnalystLoader):
-    """FMP 分析师数据加载器。"""
+    """FMP 分析师数据加载器。
+
+    实现 AbstractAnalystLoader 接口，通过 FMP stable API 获取分析师数据。
+    所有端点使用 ?symbol=X 查询参数格式。
+    """
 
     async def get_ratings(self, symbol: str) -> pl.DataFrame:
         """获取分析师评级。
@@ -17,7 +25,7 @@ class FMPAnalystLoader(AbstractAnalystLoader):
         Returns:
             分析师评级 DataFrame
         """
-        records = await self._get_list(f"/stable/historical-ratings/{symbol}")
+        records = await self._get_list("/stable/ratings-snapshot", symbol=symbol)
         return self._to_df(records, AnalystRating)
 
     async def get_price_targets(self, symbol: str) -> pl.DataFrame:
@@ -29,7 +37,7 @@ class FMPAnalystLoader(AbstractAnalystLoader):
         Returns:
             价格目标 DataFrame
         """
-        data = await self._get(f"/stable/price-target-summary/{symbol}")
+        data = await self._get("/stable/price-target-summary", symbol=symbol)
         return self._to_df([data], PriceTarget)
 
     async def get_estimates(
@@ -44,6 +52,6 @@ class FMPAnalystLoader(AbstractAnalystLoader):
         Returns:
             分析师预测 DataFrame
         """
-        params = {} if period == StatementPeriod.TTM else {"period": period.value}
-        records = await self._get_list(f"/stable/financial-estimates/{symbol}", **params)
+        params: dict[str, Any] = {"symbol": symbol, "period": period.value}
+        records = await self._get_list("/stable/analyst-estimates", **params)
         return self._to_df(records, Estimate)

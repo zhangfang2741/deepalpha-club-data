@@ -1,3 +1,5 @@
+"""FMP 市场表现数据加载器实现"""
+
 import datetime
 
 import polars as pl
@@ -9,12 +11,16 @@ from deepalpha.models.performance import MarketMover, SectorPE, SectorPerformanc
 _MOVER_PATHS: dict[MoverDirection, str] = {
     MoverDirection.GAINERS: "biggest-gainers",
     MoverDirection.LOSERS:  "biggest-losers",
-    MoverDirection.ACTIVE:  "most-active",
+    MoverDirection.ACTIVE:  "most-actives",
 }
 
 
 class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
-    """FMP 市场表现加载器。"""
+    """FMP 市场表现加载器。
+
+    实现 AbstractMarketPerformanceLoader 接口，通过 FMP stable API 获取市场表现数据。
+    FMP Start 仅支持当日快照，历史数据需要 premium 订阅。
+    """
 
     async def get_movers(
         self, direction: MoverDirection, limit: int = 20
@@ -35,33 +41,29 @@ class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
     async def get_sector_performance(self, date: datetime.date | None = None) -> pl.DataFrame:
         """获取板块表现数据。
 
+        FMP Start 仅支持当日快照，历史数据需 premium。
+        date 参数被忽略，始终返回最新快照。
+
         Args:
-            date: 查询日期（可选），不指定时获取最新数据
+            date: 查询日期（可选，当前不支持历史数据）
 
         Returns:
             板块表现数据 DataFrame
         """
-        if date is None:
-            records = await self._get_list("/stable/sector-performance-snapshot")
-        else:
-            records = await self._get_list(
-                "/stable/historical-sector-performance", date=str(date)
-            )
+        records = await self._get_list("/stable/sector-performance-snapshot")
         return self._to_df(records, SectorPerformance)
 
     async def get_sector_pe(self, date: datetime.date | None = None) -> pl.DataFrame:
         """获取板块市盈率数据。
 
+        FMP Start 仅支持当日快照，历史数据需 premium。
+        date 参数被忽略，始终返回最新快照。
+
         Args:
-            date: 查询日期（可选），不指定时获取最新数据
+            date: 查询日期（可选，当前不支持历史数据）
 
         Returns:
             板块市盈率数据 DataFrame
         """
-        if date is None:
-            records = await self._get_list("/stable/sector-PE-snapshot")
-        else:
-            records = await self._get_list(
-                "/stable/historical-sector-pe", date=str(date)
-            )
+        records = await self._get_list("/stable/sector-pe-snapshot")
         return self._to_df(records, SectorPE)

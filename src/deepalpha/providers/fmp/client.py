@@ -29,6 +29,10 @@ class FMPAsyncClient:
             response = await self._http.get(path, params=params)
             if response.status_code == 401:
                 raise FMPAuthError("API Key 无效或过期")
+            if response.status_code == 402:
+                raise FMPAuthError(f"当前订阅计划不支持此端点: {path}")
+            if response.status_code == 403:
+                raise FMPAuthError(f"访问被拒绝，请检查 API Key 或订阅计划: {path}")
             if response.status_code == 429:
                 rate_limit_count += 1
                 if rate_limit_count > self._config.max_retries:

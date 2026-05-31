@@ -44,7 +44,7 @@ async def test_get_executives_returns_dataframe(httpx_mock: HTTPXMock, client):
 
 @pytest.mark.asyncio
 async def test_get_peers_returns_list(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(json=[{"peersList": ["MSFT", "GOOGL", "AMZN"]}])
+    httpx_mock.add_response(json=[{"symbol": "MSFT"}, {"symbol": "GOOGL"}, {"symbol": "AMZN"}])
     loader = FMPCompanyLoader(client)
     peers = await loader.get_peers("AAPL")
     assert isinstance(peers, list)

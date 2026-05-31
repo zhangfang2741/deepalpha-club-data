@@ -31,8 +31,11 @@ async def test_get_quote_returns_quote(httpx_mock: HTTPXMock, client):
 
 @pytest.mark.asyncio
 async def test_get_quotes_returns_dataframe(httpx_mock: HTTPXMock, client):
+    # get_quotes 逐个查询，每个 symbol 发一次请求
     httpx_mock.add_response(json=[
         {"symbol": "AAPL", "price": 189.84, "change": 2.31, "changesPercentage": 1.23, "volume": 1000},
+    ])
+    httpx_mock.add_response(json=[
         {"symbol": "MSFT", "price": 420.10, "change": 1.05, "changesPercentage": 0.25, "volume": 2000},
     ])
     loader = FMPMarketLoader(client)
@@ -56,12 +59,9 @@ async def test_get_price_history_returns_dataframe(httpx_mock: HTTPXMock, client
     await client.aclose()
 
 @pytest.mark.asyncio
-async def test_get_market_snapshot_returns_dataframe(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(json=[
-        {"symbol": "AAPL", "price": 189.84, "change": 2.31, "changesPercentage": 1.23, "volume": 1000},
-    ])
+async def test_get_market_snapshot_returns_dataframe(client):
+    # FMP Start 无全市场快照端点，返回空 DataFrame，无需 mock 请求
     loader = FMPMarketLoader(client)
     df = await loader.get_market_snapshot(AssetClass.STOCK)
     assert isinstance(df, pl.DataFrame)
-    assert "symbol" in df.columns
     await client.aclose()

@@ -1,4 +1,7 @@
+"""FMP 公司数据加载器实现"""
+
 import datetime
+from typing import Any
 
 import polars as pl
 
@@ -7,7 +10,11 @@ from deepalpha.models.company import CompanyProfile, Executive, MarketCapRecord
 
 
 class FMPCompanyLoader(AbstractCompanyLoader):
-    """FMP 公司数据加载器。"""
+    """FMP 公司数据加载器。
+
+    实现 AbstractCompanyLoader 接口，通过 FMP stable API 获取公司数据。
+    所有端点使用 ?symbol=X 查询参数格式。
+    """
 
     async def get_profile(self, symbol: str) -> CompanyProfile:
         """获取公司信息。
@@ -18,7 +25,7 @@ class FMPCompanyLoader(AbstractCompanyLoader):
         Returns:
             CompanyProfile 对象
         """
-        data = await self._get(f"/stable/profile-symbol/{symbol}")
+        data = await self._get("/stable/profile", symbol=symbol)
         return CompanyProfile.model_validate(data)
 
     async def get_executives(self, symbol: str) -> pl.DataFrame:
@@ -30,11 +37,13 @@ class FMPCompanyLoader(AbstractCompanyLoader):
         Returns:
             高管信息 DataFrame
         """
-        records = await self._get_list(f"/stable/company-executives/{symbol}")
+        records = await self._get_list("/stable/key-executives", symbol=symbol)
         return self._to_df(records, Executive)
 
     async def get_peers(self, symbol: str) -> list[str]:
         """获取竞争对手列表。
+
+        /stable/stock-peers?symbol=X 返回包含 symbol 字段的对象列表。
 
         Args:
             symbol: 股票代码
@@ -42,8 +51,8 @@ class FMPCompanyLoader(AbstractCompanyLoader):
         Returns:
             竞争对手股票代码列表
         """
-        data = await self._get(f"/stable/peers/{symbol}")
-        peers: list[str] = data.get("peersList", [])
+        records = await self._get_list("/stable/stock-peers", symbol=symbol)
+        peers: list[str] = [r.get("symbol", "") for r in records if r.get("symbol")]
         return peers
 
     async def get_market_cap(
@@ -53,19 +62,19 @@ class FMPCompanyLoader(AbstractCompanyLoader):
 
         Args:
             symbol: 股票代码
-            start: 开始日期（可选）
+            start: 开始日期（可选），指定时查询历史市值
             end: 结束日期（可选）
 
         Returns:
             市值数据 DataFrame
         """
         if start is None and end is None:
-            records = await self._get_list(f"/stable/market-cap/{symbol}")
+            records = await self._get_list("/stable/market-capitalization", symbol=symbol)
         else:
-            params: dict[str, str] = {}
+            params: dict[str, Any] = {"symbol": symbol}
             if start:
                 params["from"] = str(start)
             if end:
                 params["to"] = str(end)
-            records = await self._get_list(f"/stable/historical-market-cap/{symbol}", **params)
+            records = await self._get_list("/stable/historical-market-capitalization", **params)
         return self._to_df(records, MarketCapRecord)
