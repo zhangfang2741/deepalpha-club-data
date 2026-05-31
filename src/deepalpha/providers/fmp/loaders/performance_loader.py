@@ -41,29 +41,33 @@ class FMPMarketPerformanceLoader(AbstractMarketPerformanceLoader):
     async def get_sector_performance(self, date: datetime.date | None = None) -> pl.DataFrame:
         """获取板块表现数据。
 
-        FMP Start 仅支持当日快照，历史数据需 premium。
-        date 参数被忽略，始终返回最新快照。
+        date=None 时使用今日日期，FMP Start 不支持历史日期（premium only）。
 
         Args:
-            date: 查询日期（可选，当前不支持历史数据）
+            date: 查询日期，默认为今日
 
         Returns:
             板块表现数据 DataFrame
         """
-        records = await self._get_list("/stable/sector-performance-snapshot")
+        query_date = date or datetime.date.today()
+        records = await self._get_list(
+            "/stable/sector-performance-snapshot", date=str(query_date)
+        )
         return self._to_df(records, SectorPerformance)
 
     async def get_sector_pe(self, date: datetime.date | None = None) -> pl.DataFrame:
         """获取板块市盈率数据。
 
-        FMP Start 仅支持当日快照，历史数据需 premium。
-        date 参数被忽略，始终返回最新快照。
+        date=None 时使用今日日期，FMP Start 不支持历史日期（premium only）。
 
         Args:
-            date: 查询日期（可选，当前不支持历史数据）
+            date: 查询日期，默认为今日
 
         Returns:
             板块市盈率数据 DataFrame
         """
-        records = await self._get_list("/stable/sector-pe-snapshot")
+        query_date = date or datetime.date.today()
+        records = await self._get_list(
+            "/stable/sector-pe-snapshot", date=str(query_date)
+        )
         return self._to_df(records, SectorPE)
