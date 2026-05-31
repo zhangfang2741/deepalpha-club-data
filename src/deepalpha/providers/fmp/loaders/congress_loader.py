@@ -1,5 +1,3 @@
-import polars as pl
-
 from deepalpha.loaders.congress_loader import AbstractCongressTradeLoader
 from deepalpha.loaders.enums import CongressChamber
 from deepalpha.models.congress import CongressTrade
@@ -14,7 +12,7 @@ class FMPCongressTradeLoader(AbstractCongressTradeLoader):
         chamber: CongressChamber = CongressChamber.SENATE,
         limit: int = 50,
         page: int = 0,
-    ) -> pl.DataFrame:
+    ) -> list[CongressTrade]:
         """获取国会议员交易数据。
 
         Args:
@@ -24,7 +22,7 @@ class FMPCongressTradeLoader(AbstractCongressTradeLoader):
             page: 分页页码（默认为 0）
 
         Returns:
-            国会议员交易数据 DataFrame
+            CongressTrade 领域对象列表
         """
         chamber_prefix = "senate" if chamber == CongressChamber.SENATE else "house"
         if symbol:
@@ -34,4 +32,4 @@ class FMPCongressTradeLoader(AbstractCongressTradeLoader):
             path = f"/stable/{chamber_prefix}-latest"
             params = {"limit": limit, "page": page}
         records = await self._get_list(path, **params)
-        return self._to_df(records, CongressTrade)
+        return self._to_models(records, CongressTrade)
