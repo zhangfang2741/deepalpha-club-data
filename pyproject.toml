@@ -46,3 +46,7 @@ strict = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: 需要真实 FMP API Key 才能运行（使用 -m integration 选择执行）",
+]
