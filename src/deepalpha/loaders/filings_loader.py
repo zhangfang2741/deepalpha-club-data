@@ -1,10 +1,8 @@
 import datetime
 from abc import abstractmethod
 
-import polars as pl
-
 from deepalpha.loaders.base import BaseLoader
-from deepalpha.models.filings import SecCompanyProfile
+from deepalpha.models.filings import SecCompanyProfile, SecFiling
 
 
 class AbstractSecFilingLoader(BaseLoader):
@@ -16,6 +14,6 @@ class AbstractSecFilingLoader(BaseLoader):
         start: datetime.date | None = None,
         end: datetime.date | None = None,
         limit: int = 20,
-    ) -> pl.DataFrame: ...
+    ) -> list[SecFiling]: ...
     @abstractmethod
     async def get_sec_profile(self, symbol: str) -> SecCompanyProfile: ...

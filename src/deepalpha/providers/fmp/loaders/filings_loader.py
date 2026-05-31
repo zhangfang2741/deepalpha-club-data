@@ -1,9 +1,9 @@
 import datetime
 
-import polars as pl
-
 from deepalpha.loaders.filings_loader import AbstractSecFilingLoader
 from deepalpha.models.filings import SecCompanyProfile, SecFiling
+
+_DEFAULT_LOOKBACK_YEARS = 3
 
 
 class FMPSecFilingLoader(AbstractSecFilingLoader):
@@ -16,8 +16,9 @@ class FMPSecFilingLoader(AbstractSecFilingLoader):
         start: datetime.date | None = None,
         end: datetime.date | None = None,
         limit: int = 20,
-    ) -> pl.DataFrame:
-        """获取 SEC 文件记录。
+    ) -> list[SecFiling]:
+        """/stable/sec-filings-search/symbol 要求 from 和 to 两个日期参数。
+        如未传入则默认最近 3 年。
 
         Args:
             symbol: 股票代码（可选）
@@ -27,25 +28,24 @@ class FMPSecFilingLoader(AbstractSecFilingLoader):
             limit: 分页大小，默认 20
 
         Returns:
-            SEC 文件记录 DataFrame
+            SecFiling 领域对象列表
         """
-        params: dict[str, str | int] = {"limit": limit}
-        if start:
-            params["from"] = str(start)
-        if end:
-            params["to"] = str(end)
+        today = datetime.date.today()
+        from_date = start or (today - datetime.timedelta(days=365 * _DEFAULT_LOOKBACK_YEARS))
+        to_date = end or today
+
+        params: dict[str, str | int] = {
+            "from": str(from_date),
+            "to": str(to_date),
+            "limit": limit,
+        }
         if symbol:
             params["symbol"] = symbol
-            if form_type:
-                params["type"] = form_type
-            records = await self._get_list("/stable/search-by-symbol", **params)
-        elif form_type:
-            records = await self._get_list(
-                "/stable/search-by-form-type", type=form_type, **params
-            )
-        else:
-            records = await self._get_list("/stable/search-by-symbol", **params)
-        return self._to_df(records, SecFiling)
+        if form_type:
+            params["formType"] = form_type
+
+        records = await self._get_list("/stable/sec-filings-search/symbol", **params)
+        return self._to_models(records, SecFiling)
 
     async def get_sec_profile(self, symbol: str) -> SecCompanyProfile:
         """获取 SEC 公司信息。
@@ -56,5 +56,5 @@ class FMPSecFilingLoader(AbstractSecFilingLoader):
         Returns:
             SecCompanyProfile 对象
         """
-        data = await self._get(f"/stable/sec-company-full-profile/{symbol}")
+        data = await self._get("/stable/sec-profile", symbol=symbol)
         return SecCompanyProfile.model_validate(data)
