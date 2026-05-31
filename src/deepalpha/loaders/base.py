@@ -1,0 +1,98 @@
+from abc import ABC
+from typing import Any, Protocol, runtime_checkable
+
+import polars as pl
+from pydantic import BaseModel
+
+
+@runtime_checkable
+class AsyncDataClient(Protocol):
+    """异步数据客户端协议。"""
+
+    async def get(self, path: str, **params: Any) -> Any:
+        """获取数据。
+
+        Args:
+            path: 端点路径
+            **params: 查询参数
+
+        Returns:
+            响应数据
+        """
+        ...
+
+
+class BaseLoader(ABC):
+    """基础加载器，提供数据获取、解析和转换的辅助方法。"""
+
+    def __init__(self, client: AsyncDataClient) -> None:
+        """初始化加载器。
+
+        Args:
+            client: 实现 AsyncDataClient 协议的客户端
+        """
+        self._client = client
+
+    async def _get(self, endpoint: str, **params: Any) -> dict[str, Any]:
+        """获取单个记录。
+
+        如果响应是列表，返回第一个元素；否则返回响应本身。
+        如果响应为空或列表为空，抛出 ValueError。
+
+        Args:
+            endpoint: 端点路径
+            **params: 查询参数
+
+        Returns:
+            单个记录字典
+
+        Raises:
+            ValueError: 响应为空时
+        """
+        result = await self._client.get(endpoint, **params)
+        if isinstance(result, list):
+            if not result:
+                raise ValueError(f"Empty response for: {endpoint}")
+            return result[0]
+        if not result:
+            raise ValueError(f"Empty response for: {endpoint}")
+        return result
+
+    async def _get_list(self, endpoint: str, **params: Any) -> list[dict[str, Any]]:
+        """获取记录列表。
+
+        如果响应是列表，返回该列表；如果是单个对象，包装为列表；
+        如果为 None，返回空列表。
+
+        Args:
+            endpoint: 端点路径
+            **params: 查询参数
+
+        Returns:
+            记录字典列表
+        """
+        result = await self._client.get(endpoint, **params)
+        if result is None:
+            return []
+        if isinstance(result, list):
+            return result
+        return [result]
+
+    def _to_df(
+        self, records: list[dict[str, Any]], model: type[BaseModel]
+    ) -> pl.DataFrame:
+        """将记录列表转换为 Polars DataFrame。
+
+        先通过 Pydantic 模型验证每条记录，然后转换为 DataFrame。
+
+        Args:
+            records: 记录字典列表
+            model: 用于验证的 Pydantic 模型
+
+        Returns:
+            验证后的 Polars DataFrame；如果记录为空，返回空 DataFrame
+        """
+        if not records:
+            return pl.DataFrame()
+        validated = [model.model_validate(r) for r in records]
+        return pl.DataFrame([v.model_dump() for v in validated])
