@@ -1,6 +1,8 @@
 import datetime
+
 import polars as pl
 from pydantic import BaseModel, Field
+
 from deepalpha.loaders.economics_loader import AbstractEconomicsLoader
 from deepalpha.loaders.enums import Interval
 

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 import polars as pl
 from pydantic import BaseModel
@@ -7,7 +7,12 @@ from pydantic import BaseModel
 
 @runtime_checkable
 class AsyncDataClient(Protocol):
-    """异步数据客户端协议。"""
+    """异步数据客户端协议（鸭子类型接口）。
+
+    使用 Protocol 定义，任何实现了 ``get`` 方法的类均自动满足此协议，
+    无需显式继承 AsyncDataClient。配合 @runtime_checkable 可在运行时
+    通过 isinstance(obj, AsyncDataClient) 检查兼容性。
+    """
 
     async def get(self, path: str, **params: Any) -> Any:
         """获取数据。
@@ -22,8 +27,14 @@ class AsyncDataClient(Protocol):
         ...
 
 
-class BaseLoader(ABC):
-    """基础加载器，提供数据获取、解析和转换的辅助方法。"""
+class BaseLoader(ABC):  # noqa: B024
+    """基础加载器，提供数据获取、解析和转换的辅助方法。
+
+    这是一个辅助基类，不直接实例化。
+    设计为继承 ABC 以传递 ABCMeta，确保子类（AbstractMarketLoader 等）
+    能够正常使用 @abstractmethod 装饰器约束实现。
+    抽象方法均定义在各 AbstractXxxLoader 子类中，而非本类。
+    """
 
     def __init__(self, client: AsyncDataClient) -> None:
         """初始化加载器。
@@ -53,10 +64,10 @@ class BaseLoader(ABC):
         if isinstance(result, list):
             if not result:
                 raise ValueError(f"Empty response for: {endpoint}")
-            return result[0]
+            return cast(dict[str, Any], result[0])
         if not result:
             raise ValueError(f"Empty response for: {endpoint}")
-        return result
+        return cast(dict[str, Any], result)
 
     async def _get_list(self, endpoint: str, **params: Any) -> list[dict[str, Any]]:
         """获取记录列表。

@@ -1,7 +1,9 @@
 import datetime
+
 import polars as pl
-from deepalpha.loaders.news_loader import AbstractNewsLoader
+
 from deepalpha.loaders.enums import AssetClass
+from deepalpha.loaders.news_loader import AbstractNewsLoader
 from deepalpha.models.news import NewsArticle
 
 _ASSET_CLASS_PATHS: dict[AssetClass, str] = {

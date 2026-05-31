@@ -1,8 +1,10 @@
 import datetime
+
 import polars as pl
-from deepalpha.loaders.market_loader import AbstractMarketLoader
+
 from deepalpha.loaders.enums import AssetClass, Interval
-from deepalpha.models.market import Quote, PriceBar
+from deepalpha.loaders.market_loader import AbstractMarketLoader
+from deepalpha.models.market import PriceBar, Quote
 
 _INTRADAY_PATHS: dict[Interval, str] = {
     Interval.ONE_MIN:     "intraday-1-min",

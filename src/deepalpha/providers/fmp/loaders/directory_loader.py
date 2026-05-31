@@ -1,8 +1,8 @@
 import polars as pl
+
 from deepalpha.loaders.directory_loader import AbstractDirectoryLoader
 from deepalpha.loaders.enums import AssetClass
-from deepalpha.models.directory import SymbolInfo, ExchangeInfo
-
+from deepalpha.models.directory import ExchangeInfo, SymbolInfo
 
 _SYMBOL_PATHS: dict[AssetClass, str] = {
     AssetClass.STOCK:       "actively-trading-list",

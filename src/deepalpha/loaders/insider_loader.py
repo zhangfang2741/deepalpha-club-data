@@ -1,7 +1,10 @@
 from abc import abstractmethod
+
 import polars as pl
+
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.models.insider import InsiderStatistics
+
 
 class AbstractInsiderTradeLoader(BaseLoader):
     @abstractmethod

@@ -1,8 +1,11 @@
-from abc import abstractmethod
 import datetime
+from abc import abstractmethod
+
 import polars as pl
+
 from deepalpha.loaders.base import BaseLoader
-from deepalpha.loaders.enums import Interval, IndicatorType
+from deepalpha.loaders.enums import IndicatorType, Interval
+
 
 class AbstractTechnicalIndicatorLoader(BaseLoader):
     @abstractmethod

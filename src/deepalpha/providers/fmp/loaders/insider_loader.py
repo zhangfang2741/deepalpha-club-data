@@ -1,6 +1,7 @@
 import polars as pl
+
 from deepalpha.loaders.insider_loader import AbstractInsiderTradeLoader
-from deepalpha.models.insider import InsiderTrade, InsiderStatistics
+from deepalpha.models.insider import InsiderStatistics, InsiderTrade
 
 
 class FMPInsiderTradeLoader(AbstractInsiderTradeLoader):

@@ -1,17 +1,19 @@
 """FMP 财务数据加载器实现"""
 
+from typing import Any
+
 import polars as pl
-from deepalpha.loaders.financial_loader import AbstractFinancialLoader
+
 from deepalpha.loaders.enums import StatementPeriod
+from deepalpha.loaders.financial_loader import AbstractFinancialLoader
 from deepalpha.models.financial import (
-    IncomeStatement,
     BalanceSheet,
     CashFlow,
     FinancialRatio,
+    IncomeStatement,
     KeyMetrics,
     Valuation,
 )
-
 
 # TTM 端点映射：(标准端点, TTM端点)
 _TTM_PATHS: dict[str, tuple[str, str]] = {
@@ -23,7 +25,7 @@ _TTM_PATHS: dict[str, tuple[str, str]] = {
 }
 
 
-def _resolve_path(key: str, period: StatementPeriod) -> tuple[str, dict]:
+def _resolve_path(key: str, period: StatementPeriod) -> tuple[str, dict[str, Any]]:
     """根据报告期解析端点和参数。
 
     Args:

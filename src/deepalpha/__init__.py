@@ -1,9 +1,13 @@
-from deepalpha.providers.fmp import FMPDataHub
 from deepalpha.loaders import AbstractDataHub
 from deepalpha.loaders.enums import (
-    AssetClass, Interval, StatementPeriod,
-    IndicatorType, MoverDirection, CongressChamber,
+    AssetClass,
+    CongressChamber,
+    IndicatorType,
+    Interval,
+    MoverDirection,
+    StatementPeriod,
 )
+from deepalpha.providers.fmp import FMPDataHub
 
 __all__ = [
     "FMPDataHub",

@@ -4,6 +4,7 @@
     FMP_API_KEY=your_key uv run pytest tests/integration/ -v -m integration
 """
 import pytest
+
 from deepalpha import FMPDataHub
 
 

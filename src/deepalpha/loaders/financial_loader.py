@@ -1,8 +1,11 @@
 from abc import abstractmethod
+
 import polars as pl
+
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.loaders.enums import StatementPeriod
 from deepalpha.models.financial import Valuation
+
 
 class AbstractFinancialLoader(BaseLoader):
     @abstractmethod

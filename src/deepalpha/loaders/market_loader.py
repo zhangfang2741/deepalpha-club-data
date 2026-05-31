@@ -1,9 +1,12 @@
-from abc import abstractmethod
 import datetime
+from abc import abstractmethod
+
 import polars as pl
+
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.loaders.enums import AssetClass, Interval
 from deepalpha.models.market import Quote
+
 
 class AbstractMarketLoader(BaseLoader):
     @abstractmethod

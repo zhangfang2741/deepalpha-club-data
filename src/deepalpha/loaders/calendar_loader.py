@@ -1,7 +1,10 @@
-from abc import abstractmethod
 import datetime
+from abc import abstractmethod
+
 import polars as pl
+
 from deepalpha.loaders.base import BaseLoader
+
 
 class AbstractCalendarLoader(BaseLoader):
     @abstractmethod

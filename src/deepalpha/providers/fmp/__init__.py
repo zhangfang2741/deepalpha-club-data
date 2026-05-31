@@ -1,12 +1,21 @@
 from typing import Any
-from deepalpha.providers.fmp.config import FMPConfig
+
 from deepalpha.providers.fmp.client import FMPAsyncClient
+from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.loaders import (
-    FMPMarketLoader, FMPFinancialLoader, FMPCompanyLoader,
-    FMPAnalystLoader, FMPCalendarLoader, FMPNewsLoader,
-    FMPTechnicalIndicatorLoader, FMPEconomicsLoader,
-    FMPInsiderTradeLoader, FMPSecFilingLoader,
-    FMPMarketPerformanceLoader, FMPCongressTradeLoader, FMPDirectoryLoader,
+    FMPAnalystLoader,
+    FMPCalendarLoader,
+    FMPCompanyLoader,
+    FMPCongressTradeLoader,
+    FMPDirectoryLoader,
+    FMPEconomicsLoader,
+    FMPFinancialLoader,
+    FMPInsiderTradeLoader,
+    FMPMarketLoader,
+    FMPMarketPerformanceLoader,
+    FMPNewsLoader,
+    FMPSecFilingLoader,
+    FMPTechnicalIndicatorLoader,
 )
 
 
@@ -20,7 +29,7 @@ class FMPDataHub:
     """
 
     def __init__(self, config: FMPConfig | None = None) -> None:
-        cfg = config or FMPConfig()
+        cfg = config or FMPConfig()  # type: ignore[call-arg]
         self._client = FMPAsyncClient(cfg)
         self.market      = FMPMarketLoader(self._client)
         self.financial   = FMPFinancialLoader(self._client)

@@ -1,5 +1,7 @@
 import datetime
+
 import polars as pl
+
 from deepalpha.loaders.company_loader import AbstractCompanyLoader
 from deepalpha.models.company import CompanyProfile, Executive, MarketCapRecord
 
@@ -41,7 +43,8 @@ class FMPCompanyLoader(AbstractCompanyLoader):
             竞争对手股票代码列表
         """
         data = await self._get(f"/stable/peers/{symbol}")
-        return data.get("peersList", [])
+        peers: list[str] = data.get("peersList", [])
+        return peers
 
     async def get_market_cap(
         self, symbol: str, start: datetime.date | None = None, end: datetime.date | None = None

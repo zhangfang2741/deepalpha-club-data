@@ -1,7 +1,9 @@
 import datetime
+
 import polars as pl
+
 from deepalpha.loaders.calendar_loader import AbstractCalendarLoader
-from deepalpha.models.calendar import EarningsEvent, DividendEvent, IPOEvent, SplitEvent
+from deepalpha.models.calendar import DividendEvent, EarningsEvent, IPOEvent, SplitEvent
 
 
 class FMPCalendarLoader(AbstractCalendarLoader):

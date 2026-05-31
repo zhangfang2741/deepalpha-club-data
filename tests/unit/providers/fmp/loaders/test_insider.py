@@ -1,10 +1,12 @@
-import pytest
 import polars as pl
+import pytest
 from pytest_httpx import HTTPXMock
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.loaders.insider_loader import FMPInsiderTradeLoader
+
 from deepalpha.models.insider import InsiderStatistics
+from deepalpha.providers.fmp.client import FMPAsyncClient
+from deepalpha.providers.fmp.config import FMPConfig
+from deepalpha.providers.fmp.loaders.insider_loader import FMPInsiderTradeLoader
+
 
 @pytest.fixture
 def client():

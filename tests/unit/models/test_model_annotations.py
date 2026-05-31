@@ -1,21 +1,26 @@
 # tests/unit/models/test_model_annotations.py
 import pytest
 from pydantic import BaseModel
-from deepalpha.models.market import Quote, PriceBar
+
+from deepalpha.models.analyst import AnalystRating, Estimate, PriceTarget
+from deepalpha.models.calendar import DividendEvent, EarningsEvent, IPOEvent, SplitEvent
 from deepalpha.models.company import CompanyProfile, Executive, MarketCapRecord
-from deepalpha.models.financial import (
-    IncomeStatement, BalanceSheet, CashFlow,
-    FinancialRatio, KeyMetrics, Valuation,
-)
-from deepalpha.models.analyst import AnalystRating, PriceTarget, Estimate
-from deepalpha.models.calendar import EarningsEvent, DividendEvent, IPOEvent, SplitEvent
-from deepalpha.models.news import NewsArticle
-from deepalpha.models.insider import InsiderTrade, InsiderStatistics
-from deepalpha.models.filings import SecFiling, SecCompanyProfile
-from deepalpha.models.performance import MarketMover, SectorPerformance, SectorPE
 from deepalpha.models.congress import CongressTrade
-from deepalpha.models.directory import SymbolInfo, ExchangeInfo
+from deepalpha.models.directory import ExchangeInfo, SymbolInfo
+from deepalpha.models.filings import SecCompanyProfile, SecFiling
+from deepalpha.models.financial import (
+    BalanceSheet,
+    CashFlow,
+    FinancialRatio,
+    IncomeStatement,
+    KeyMetrics,
+    Valuation,
+)
 from deepalpha.models.indicators import IndicatorRow
+from deepalpha.models.insider import InsiderStatistics, InsiderTrade
+from deepalpha.models.market import PriceBar, Quote
+from deepalpha.models.news import NewsArticle
+from deepalpha.models.performance import MarketMover, SectorPE, SectorPerformance
 
 
 def assert_fields_annotated(model: type[BaseModel]) -> None:

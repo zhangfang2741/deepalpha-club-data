@@ -1,7 +1,8 @@
 import polars as pl
+
 from deepalpha.loaders.analyst_loader import AbstractAnalystLoader
 from deepalpha.loaders.enums import StatementPeriod
-from deepalpha.models.analyst import AnalystRating, PriceTarget, Estimate
+from deepalpha.models.analyst import AnalystRating, Estimate, PriceTarget
 
 
 class FMPAnalystLoader(AbstractAnalystLoader):

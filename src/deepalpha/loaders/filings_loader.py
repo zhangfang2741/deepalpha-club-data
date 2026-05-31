@@ -1,8 +1,11 @@
-from abc import abstractmethod
 import datetime
+from abc import abstractmethod
+
 import polars as pl
+
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.models.filings import SecCompanyProfile
+
 
 class AbstractSecFilingLoader(BaseLoader):
     @abstractmethod

@@ -1,12 +1,18 @@
 # tests/unit/models/test_enums.py
 from deepalpha.loaders.enums import (
-    AssetClass, Interval, StatementPeriod,
+    AssetClass,
     IndicatorType,
+    Interval,
+    StatementPeriod,
 )
 from deepalpha.providers.fmp.errors import (
-    FMPError, FMPAuthError, FMPRateLimitError,
-    FMPNotFoundError, FMPServerError,
+    FMPAuthError,
+    FMPError,
+    FMPNotFoundError,
+    FMPRateLimitError,
+    FMPServerError,
 )
+
 
 def test_asset_class_values():
     assert AssetClass.STOCK == "stock"
