@@ -1,9 +1,9 @@
 import datetime
 
-import polars as pl
 import pytest
 from pytest_httpx import HTTPXMock
 
+from deepalpha.models.calendar import DividendEvent, EarningsEvent, IPOEvent, SplitEvent
 from deepalpha.providers.fmp.client import FMPAsyncClient
 from deepalpha.providers.fmp.config import FMPConfig
 from deepalpha.providers.fmp.loaders.calendar_loader import FMPCalendarLoader
@@ -13,49 +13,61 @@ from deepalpha.providers.fmp.loaders.calendar_loader import FMPCalendarLoader
 def client():
     return FMPAsyncClient(FMPConfig(api_key="test-key"))
 
-@pytest.mark.asyncio
-async def test_get_earnings_calendar(httpx_mock: HTTPXMock, client):
-    httpx_mock.add_response(json=[{
-        "symbol": "AAPL", "date": "2024-05-02", "eps": 1.53,
-        "epsEstimated": 1.50, "time": "amc", "revenueEstimated": 90000000000,
-    }])
-    loader = FMPCalendarLoader(client)
-    df = await loader.get_earnings_calendar(datetime.date(2024, 5, 1), datetime.date(2024, 5, 31))
-    assert isinstance(df, pl.DataFrame)
-    assert "symbol" in df.columns
-    await client.aclose()
+
+START = datetime.date(2024, 1, 1)
+END = datetime.date(2024, 3, 31)
+
 
 @pytest.mark.asyncio
-async def test_get_dividend_calendar(httpx_mock: HTTPXMock, client):
+async def test_get_earnings_calendar_returns_list(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(json=[{
-        "symbol": "AAPL", "date": "2024-05-10", "dividend": 0.25,
-        "recordDate": "2024-05-13", "paymentDate": "2024-05-16",
+        "symbol": "AAPL", "date": "2024-02-01",
+        "eps": 2.18, "epsEstimated": 2.10, "time": "amc", "revenueEstimated": 118000000000,
     }])
     loader = FMPCalendarLoader(client)
-    df = await loader.get_dividend_calendar(datetime.date(2024, 5, 1), datetime.date(2024, 5, 31))
-    assert isinstance(df, pl.DataFrame)
-    assert "dividend" in df.columns
+    result = await loader.get_earnings_calendar(START, END)
+    assert isinstance(result, list)
+    assert isinstance(result[0], EarningsEvent)
+    assert result[0].symbol == "AAPL"
     await client.aclose()
 
+
 @pytest.mark.asyncio
-async def test_get_ipo_calendar(httpx_mock: HTTPXMock, client):
+async def test_get_dividend_calendar_returns_list(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(json=[{
-        "symbol": "XYZ", "company": "XYZ Corp", "date": "2024-05-15",
-        "exchange": "NASDAQ", "priceRange": "$10-$12", "shares": 5000000,
+        "symbol": "AAPL", "date": "2024-02-09",
+        "dividend": 0.24, "recordDate": "2024-02-12", "paymentDate": "2024-02-15",
     }])
     loader = FMPCalendarLoader(client)
-    df = await loader.get_ipo_calendar(datetime.date(2024, 5, 1), datetime.date(2024, 5, 31))
-    assert isinstance(df, pl.DataFrame)
-    assert "company" in df.columns
+    result = await loader.get_dividend_calendar(START, END)
+    assert isinstance(result, list)
+    assert isinstance(result[0], DividendEvent)
+    assert result[0].dividend == 0.24
     await client.aclose()
 
+
 @pytest.mark.asyncio
-async def test_get_splits_calendar(httpx_mock: HTTPXMock, client):
+async def test_get_ipo_calendar_returns_list(httpx_mock: HTTPXMock, client):
+    httpx_mock.add_response(json=[{
+        "symbol": "NEWCO", "company": "New Company Inc.", "date": "2024-02-20",
+        "exchange": "NASDAQ", "priceRange": "$10-$12", "shares": 10000000,
+    }])
+    loader = FMPCalendarLoader(client)
+    result = await loader.get_ipo_calendar(START, END)
+    assert isinstance(result, list)
+    assert isinstance(result[0], IPOEvent)
+    assert result[0].symbol == "NEWCO"
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_get_splits_calendar_returns_list(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(json=[{
         "symbol": "NVDA", "date": "2024-06-10", "numerator": 10.0, "denominator": 1.0,
     }])
     loader = FMPCalendarLoader(client)
-    df = await loader.get_splits_calendar(datetime.date(2024, 6, 1), datetime.date(2024, 6, 30))
-    assert isinstance(df, pl.DataFrame)
-    assert "numerator" in df.columns
+    result = await loader.get_splits_calendar(START, END)
+    assert isinstance(result, list)
+    assert isinstance(result[0], SplitEvent)
+    assert result[0].numerator == 10.0
     await client.aclose()
