@@ -1,4 +1,3 @@
-import datetime
 import pytest
 import polars as pl
 from pytest_httpx import HTTPXMock

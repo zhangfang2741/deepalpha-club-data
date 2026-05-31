@@ -1,7 +1,7 @@
 # tests/unit/models/test_enums.py
 from deepalpha.loaders.enums import (
     AssetClass, Interval, StatementPeriod,
-    IndicatorType, MoverDirection, CongressChamber,
+    IndicatorType,
 )
 from deepalpha.providers.fmp.errors import (
     FMPError, FMPAuthError, FMPRateLimitError,

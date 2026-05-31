@@ -1,6 +1,6 @@
 import pytest
 from pydantic import BaseModel, Field
-from deepalpha.loaders.base import BaseLoader, AsyncDataClient
+from deepalpha.loaders.base import BaseLoader
 
 
 class FakeClient:
