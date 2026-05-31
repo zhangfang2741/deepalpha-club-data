@@ -1,8 +1,8 @@
 # src/deepalpha/loaders/enums.py
-from enum import StrEnum
+from enum import Enum
 
 
-class AssetClass(StrEnum):
+class AssetClass(str, Enum):
     """资产类别枚举，用于区分不同市场标的类型。"""
 
     STOCK = "stock"
@@ -14,7 +14,7 @@ class AssetClass(StrEnum):
     MUTUAL_FUND = "mutual_fund"
 
 
-class Interval(StrEnum):
+class Interval(str, Enum):
     """K线时间周期枚举，从分钟级到月线。"""
 
     ONE_MIN     = "1m"
@@ -28,7 +28,7 @@ class Interval(StrEnum):
     ONE_MONTH   = "1mo"
 
 
-class StatementPeriod(StrEnum):
+class StatementPeriod(str, Enum):
     """财务报告期枚举，支持年度、季度和滚动12个月（TTM）。"""
 
     ANNUAL  = "annual"
@@ -36,7 +36,7 @@ class StatementPeriod(StrEnum):
     TTM     = "ttm"
 
 
-class IndicatorType(StrEnum):
+class IndicatorType(str, Enum):
     """技术分析指标类型枚举。
 
     FMP Start 会员支持：SMA/EMA/DEMA/TEMA/WMA/RSI/ADX/WILLIAMS/STD_DEV（9种）。
@@ -61,7 +61,7 @@ class IndicatorType(StrEnum):
     OBV      = "obv"
 
 
-class MoverDirection(StrEnum):
+class MoverDirection(str, Enum):
     """市场涨跌榜方向枚举。"""
 
     GAINERS = "gainers"
@@ -69,7 +69,7 @@ class MoverDirection(StrEnum):
     ACTIVE  = "active"
 
 
-class CongressChamber(StrEnum):
+class CongressChamber(str, Enum):
     """美国国会议院枚举（仅适用于美国市场数据）。"""
 
     SENATE = "senate"
