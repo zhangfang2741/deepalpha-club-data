@@ -19,7 +19,7 @@ def client():
 async def test_get_quote_returns_quote(httpx_mock: HTTPXMock, client):
     httpx_mock.add_response(json=[{
         "symbol": "AAPL", "price": 189.84, "change": 2.31,
-        "changesPercentage": 1.23, "volume": 45000000,
+        "changePercentage": 1.23, "volume": 45000000,
     }])
     loader = FMPMarketLoader(client)
     quote = await loader.get_quote("AAPL")
@@ -33,10 +33,10 @@ async def test_get_quote_returns_quote(httpx_mock: HTTPXMock, client):
 async def test_get_quotes_returns_dataframe(httpx_mock: HTTPXMock, client):
     # get_quotes 逐个查询，每个 symbol 发一次请求
     httpx_mock.add_response(json=[
-        {"symbol": "AAPL", "price": 189.84, "change": 2.31, "changesPercentage": 1.23, "volume": 1000},
+        {"symbol": "AAPL", "price": 189.84, "change": 2.31, "changePercentage": 1.23, "volume": 1000},
     ])
     httpx_mock.add_response(json=[
-        {"symbol": "MSFT", "price": 420.10, "change": 1.05, "changesPercentage": 0.25, "volume": 2000},
+        {"symbol": "MSFT", "price": 420.10, "change": 1.05, "changePercentage": 0.25, "volume": 2000},
     ])
     loader = FMPMarketLoader(client)
     df = await loader.get_quotes(["AAPL", "MSFT"])

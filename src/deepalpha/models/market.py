@@ -12,9 +12,9 @@ class Quote(BaseModel):
     name: str | None = Field(None, title="公司名称", description="上市公司全称")
     price: float = Field(title="最新价格", description="最近一次成交价格（美元）")
     change: float = Field(title="涨跌额", description="相对上一收盘价的价格变动")
-    changes_percentage: float = Field(
-        title="涨跌幅", description="涨跌额占上一收盘价的百分比",
-        validation_alias="changesPercentage",
+    changes_percentage: float | None = Field(
+        None, title="涨跌幅", description="涨跌额占上一收盘价的百分比",
+        validation_alias="changePercentage",
     )
     day_low: float | None = Field(None, title="日内最低价", description="当日最低成交价")
     day_high: float | None = Field(None, title="日内最高价", description="当日最高成交价")
