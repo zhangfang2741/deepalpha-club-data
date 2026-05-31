@@ -1,19 +1,14 @@
 import datetime
 
-import polars as pl
-from pydantic import BaseModel, Field
-
 from deepalpha.loaders.economics_loader import AbstractEconomicsLoader
 from deepalpha.loaders.enums import Interval
+from deepalpha.models.indicators import IndicatorRow
 
 _FMP_SUPPORTED: list[str] = [
     "CPI", "GDP", "REAL_GDP", "UNEMPLOYMENT",
     "FEDERAL_FUNDS_RATE", "TREASURY_YIELD", "RETAIL_SALES",
 ]
 
-class _EconRow(BaseModel):
-    date: datetime.date = Field(title="日期", description="经济指标数据对应的时间点")
-    value: float | None = Field(None, title="指标值", description="经济指标的数值")
 
 class FMPEconomicsLoader(AbstractEconomicsLoader):
     async def get_indicator(
@@ -22,14 +17,23 @@ class FMPEconomicsLoader(AbstractEconomicsLoader):
         start: datetime.date | None = None,
         end: datetime.date | None = None,
         interval: Interval = Interval.ONE_MONTH,
-    ) -> pl.DataFrame:
-        params: dict[str, str] = {"name": indicator_name.upper()}
+    ) -> list[IndicatorRow]:
+        from deepalpha.providers.fmp.errors import FMPNotFoundError
+        try:
+            records = await self._get_list(
+                "/stable/economics-indicators", name=indicator_name.upper()
+            )
+        except FMPNotFoundError:
+            return []
+        models = self._to_models(records, IndicatorRow)
+        # IndicatorRow.date 是 datetime.datetime，需转换 date 参数后比较
         if start:
-            params["from"] = str(start)
+            start_dt = datetime.datetime(start.year, start.month, start.day)
+            models = [m for m in models if m.date >= start_dt]
         if end:
-            params["to"] = str(end)
-        records = await self._get_list("/stable/economics-indicators", **params)
-        return self._to_df(records, _EconRow)
+            end_dt = datetime.datetime(end.year, end.month, end.day, 23, 59, 59)
+            models = [m for m in models if m.date <= end_dt]
+        return models
 
     async def get_available_indicators(self) -> list[str]:
         return list(_FMP_SUPPORTED)

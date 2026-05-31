@@ -1,10 +1,9 @@
 import datetime
 from abc import abstractmethod
 
-import polars as pl
-
 from deepalpha.loaders.base import BaseLoader
 from deepalpha.loaders.enums import Interval
+from deepalpha.models.indicators import IndicatorRow
 
 
 class AbstractEconomicsLoader(BaseLoader):
@@ -15,6 +14,6 @@ class AbstractEconomicsLoader(BaseLoader):
         start: datetime.date | None = None,
         end: datetime.date | None = None,
         interval: Interval = Interval.ONE_MONTH,
-    ) -> pl.DataFrame: ...
+    ) -> list[IndicatorRow]: ...
     @abstractmethod
     async def get_available_indicators(self) -> list[str]: ...
