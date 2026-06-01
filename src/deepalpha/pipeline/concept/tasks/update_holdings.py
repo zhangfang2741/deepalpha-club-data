@@ -54,6 +54,12 @@ async def run(config: ConceptPipelineConfig | None = None) -> None:
 
         summaries = await db.get_all_concept_summaries()
 
+    # 按 concept 分组聚合结果，直接从内存构建缓存，避免重新查询 DB
+    from collections import defaultdict
+    stocks_by_concept: dict[str, list] = defaultdict(list)
+    for s in stocks:
+        stocks_by_concept[s.concept].append(s)
+
     cache = ConceptCache(
         host=config.valkey_host,
         port=config.valkey_port,
@@ -63,10 +69,8 @@ async def run(config: ConceptPipelineConfig | None = None) -> None:
     )
     try:
         await cache.set_list(summaries)
-        async with ConceptDb(config.asyncpg_dsn()) as db:
-            for summary in summaries:
-                concept_stocks = await db.get_latest_stocks(summary.concept)
-                await cache.set_concept(summary.concept, concept_stocks)
+        for summary in summaries:
+            await cache.set_concept(summary.concept, stocks_by_concept.get(summary.concept, []))
         logger.info("缓存刷新完成，共 %d 个概念", len(summaries))
     finally:
         await cache.close()

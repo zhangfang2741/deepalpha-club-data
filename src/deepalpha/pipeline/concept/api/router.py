@@ -7,6 +7,8 @@
 """
 
 import datetime
+from collections.abc import AsyncGenerator
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -19,18 +21,25 @@ from deepalpha.pipeline.concept.db import ConceptDb
 router = APIRouter(prefix="/concept", tags=["concept"])
 
 
+@lru_cache(maxsize=1)
 def get_config() -> ConceptPipelineConfig:
     return ConceptPipelineConfig()
 
 
-def get_cache(config: Annotated[ConceptPipelineConfig, Depends(get_config)]) -> ConceptCache:
-    return ConceptCache(
+async def get_cache(
+    config: Annotated[ConceptPipelineConfig, Depends(get_config)],
+) -> AsyncGenerator[ConceptCache, None]:
+    cache = ConceptCache(
         host=config.valkey_host,
         port=config.valkey_port,
         password=config.valkey_password,
         ssl=config.valkey_ssl,
         ttl=config.concept_cache_ttl,
     )
+    try:
+        yield cache
+    finally:
+        await cache.close()
 
 
 @router.get("/list", response_model=list[ConceptSummary])
@@ -56,17 +65,16 @@ async def get_concept(
     min_etf_count: int = Query(1, ge=1, description="最低 ETF 覆盖数，用于控制成分股纯度"),
 ) -> list[ConceptStock]:
     """返回指定概念的最新成分股列表，按 etf_count 降序排列。"""
-    cached = await cache.get_concept(name)
-    if cached is None:
+    stocks = await cache.get_concept(name)
+    if stocks is None:
         async with ConceptDb(config.asyncpg_dsn()) as db:
-            cached = await db.get_latest_stocks(name)
-        if cached:
-            await cache.set_concept(name, cached)
+            stocks = await db.get_latest_stocks(name)
+        if stocks:
+            await cache.set_concept(name, stocks)
 
-    filtered = [s for s in (cached or []) if s.etf_count >= min_etf_count]
-    if not filtered and not cached:
+    if not stocks:
         raise HTTPException(status_code=404, detail=f"概念 '{name}' 不存在")
-    return filtered
+    return [s for s in stocks if s.etf_count >= min_etf_count]
 
 
 @router.get("/{name}/history", response_model=list[ConceptStock])
