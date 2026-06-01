@@ -9,4 +9,4 @@ class FMPConfig(BaseSettings):
     max_connections: int = Field(10, title="最大并发连接数")
     max_retries: int = Field(3, title="最大重试次数", description="5xx 时的指数退避重试次数")
 
-    model_config = SettingsConfigDict(env_prefix="FMP_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="FMP_", env_file=".env", extra="ignore")

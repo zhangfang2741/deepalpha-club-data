@@ -1,5 +1,4 @@
 import datetime
-import pytest
 from deepalpha.models.concept import ConceptEtfMap, ConceptStock, ConceptSummary
 
 

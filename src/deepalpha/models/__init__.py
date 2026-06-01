@@ -16,6 +16,7 @@ from deepalpha.models.indicators import IndicatorRow
 from deepalpha.models.insider import InsiderStatistics, InsiderTrade
 from deepalpha.models.market import PriceBar, Quote
 from deepalpha.models.news import NewsArticle
+from deepalpha.models.concept import ConceptEtfMap, ConceptStock, ConceptSummary
 from deepalpha.models.performance import MarketMover, SectorPE, SectorPerformance
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     "SecFiling", "SecCompanyProfile",
     "MarketMover", "SectorPerformance", "SectorPE",
     "CongressTrade", "SymbolInfo", "ExchangeInfo",
+    "ConceptEtfMap", "ConceptStock", "ConceptSummary",
 ]
