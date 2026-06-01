@@ -1,6 +1,8 @@
 """市场领域枚举（domain 层，零外部依赖）"""
 from enum import Enum
 
+from deepalpha.domain.financial.enums import StatementPeriod  # noqa: F401
+
 
 class AssetClass(str, Enum):
     """资产类别枚举，用于区分不同市场标的类型。"""
@@ -26,14 +28,6 @@ class Interval(str, Enum):
     ONE_DAY     = "1d"
     ONE_WEEK    = "1w"
     ONE_MONTH   = "1mo"
-
-
-class StatementPeriod(str, Enum):
-    """财务报告期枚举，支持年度、季度和滚动12个月（TTM）。"""
-
-    ANNUAL  = "annual"
-    QUARTER = "quarter"
-    TTM     = "ttm"
 
 
 class IndicatorType(str, Enum):
