@@ -1,5 +1,5 @@
 import datetime
-from deepalpha.models.concept import ConceptEtfMap, ConceptStock, ConceptSummary
+from deepalpha.domain.concept.models import ConceptEtfMap, ConceptStock, ConceptSummary
 
 
 def test_concept_etf_map_required_fields():

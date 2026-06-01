@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel, Field
 
-from deepalpha.loaders.base import BaseLoader
+from deepalpha.infrastructure.providers.base import BaseLoader
 
 
 class FakeClient:

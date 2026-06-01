@@ -2,9 +2,9 @@ import datetime
 import pytest
 from unittest.mock import AsyncMock
 
-from deepalpha.models.concept import ConceptEtfMap
-from deepalpha.pipeline.concept.etfdb_scraper import ConceptEtfCandidate
-from deepalpha.pipeline.concept.finnhub_loader import (
+from deepalpha.domain.concept.models import ConceptEtfMap
+from deepalpha.infrastructure.providers.etfdb.scraper import ConceptEtfCandidate
+from deepalpha.infrastructure.providers.finnhub.etf_loader import (
     aggregate_holdings,
     fetch_holdings_with_fallback,
     filter_etfs_by_aum,

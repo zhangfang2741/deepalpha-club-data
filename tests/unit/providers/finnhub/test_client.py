@@ -1,8 +1,8 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.providers.finnhub.client import FinnhubClient
-from deepalpha.providers.finnhub.config import FinnhubConfig
+from deepalpha.infrastructure.providers.finnhub.client import FinnhubClient
+from deepalpha.infrastructure.providers.finnhub.config import FinnhubConfig
 
 
 @pytest.fixture

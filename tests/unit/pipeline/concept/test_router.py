@@ -2,19 +2,12 @@ import datetime
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from deepalpha.models.concept import ConceptStock, ConceptSummary
-from deepalpha.pipeline.concept.api.router import router, get_cache, get_config
-from deepalpha.pipeline.concept.config import ConceptPipelineConfig
-
-
-@pytest.fixture
-def test_config():
-    return ConceptPipelineConfig(
-        postgres_host="localhost", postgres_db="test", postgres_user="u", postgres_password="p",
-        valkey_host="localhost", finnhub_api_key="test",
-    )
+from deepalpha.domain.concept.models import ConceptStock, ConceptSummary
+from deepalpha.interface.web.routers.concept import router
+from deepalpha.interface.web.deps import get_services
+from deepalpha.application.agent.tools import Services
 
 
 @pytest.fixture
@@ -38,22 +31,26 @@ def sample_stocks():
 
 
 @pytest.fixture
-def mock_cache(sample_summaries, sample_stocks):
-    cache = AsyncMock()
-    cache.get_list = AsyncMock(return_value=sample_summaries)
-    cache.get_concept = AsyncMock(return_value=sample_stocks)
-    cache.set_list = AsyncMock()
-    cache.set_concept = AsyncMock()
-    cache.close = AsyncMock()
-    return cache
+def mock_concept_svc(sample_summaries, sample_stocks):
+    svc = AsyncMock()
+    svc.list_summaries = AsyncMock(return_value=sample_summaries)
+    svc.get_concept = AsyncMock(return_value=sample_stocks)
+    svc.get_concept_history = AsyncMock(return_value=sample_stocks)
+    return svc
 
 
 @pytest.fixture
-def client(test_config, mock_cache):
+def mock_services(mock_concept_svc):
+    services = AsyncMock(spec=Services)
+    services.concept = mock_concept_svc
+    return services
+
+
+@pytest.fixture
+def client(mock_services):
     app = FastAPI()
     app.include_router(router)
-    app.dependency_overrides[get_config] = lambda: test_config
-    app.dependency_overrides[get_cache] = lambda: mock_cache
+    app.dependency_overrides[get_services] = lambda: mock_services
     return TestClient(app)
 
 
@@ -80,4 +77,4 @@ def test_get_concept_filters_by_min_etf_count(client, sample_stocks):
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) == 1
-    assert data[0]["symbol"] == "NVDA"  # etf_count=4 passes; AMD etf_count=2 filtered out
+    assert data[0]["symbol"] == "NVDA"  # etf_count=4 通过；AMD etf_count=2 被过滤

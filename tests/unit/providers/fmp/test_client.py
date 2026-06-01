@@ -1,9 +1,9 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.errors import (
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.errors import (
     FMPAuthError,
     FMPNotFoundError,
     FMPServerError,
