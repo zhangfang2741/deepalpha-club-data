@@ -39,7 +39,7 @@ async def filter_etfs_by_aum(
         try:
             profile = await client.get_etf_profile(candidate.etf_symbol)
             mkt_cap = profile.get("mktCap")
-            aum_million = mkt_cap / 1_000_000 if mkt_cap else None
+            aum_million = mkt_cap / 1_000_000 if mkt_cap is not None else None
             if aum_million is None or aum_million >= aum_threshold_million:
                 result.append(ConceptEtfMap(
                     concept=candidate.concept,

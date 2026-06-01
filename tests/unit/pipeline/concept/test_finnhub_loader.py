@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock
 
 from deepalpha.models.concept import ConceptEtfMap
 from deepalpha.pipeline.concept.etfdb_scraper import ConceptEtfCandidate
-from deepalpha.pipeline.concept.finnhub_loader import filter_etfs_by_aum, aggregate_holdings
+from deepalpha.pipeline.concept.finnhub_loader import (
+    aggregate_holdings,
+    fetch_holdings_with_fallback,
+    filter_etfs_by_aum,
+)
 
 
 @pytest.fixture
@@ -57,3 +61,23 @@ async def test_aggregate_holdings_calculates_etf_count_and_total_weight():
     amd = next(s for s in result if s.symbol == "AMD")
     assert amd.etf_count == 1
     assert amd.total_weight == pytest.approx(4.0)
+
+
+@pytest.mark.asyncio
+async def test_fetch_holdings_with_fallback_returns_finnhub_on_success():
+    mock_client = AsyncMock()
+    mock_client.get_etf_holdings = AsyncMock(return_value=[
+        {"symbol": "NVDA", "name": "NVIDIA", "percent": 8.5}
+    ])
+    result = await fetch_holdings_with_fallback("BOTZ", mock_client)
+    assert len(result) == 1
+    assert result[0]["symbol"] == "NVDA"
+
+
+@pytest.mark.asyncio
+async def test_fetch_holdings_with_fallback_returns_empty_for_unknown_etf_on_failure():
+    mock_client = AsyncMock()
+    mock_client.get_etf_holdings = AsyncMock(side_effect=Exception("Finnhub error"))
+    # UNKNOWN_ETF has no CSV fallback URL, so returns []
+    result = await fetch_holdings_with_fallback("UNKNOWN_ETF", mock_client)
+    assert result == []

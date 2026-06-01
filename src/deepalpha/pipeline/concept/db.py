@@ -5,6 +5,7 @@
 """
 
 import datetime
+from collections import defaultdict
 from typing import Any
 
 import asyncpg
@@ -137,7 +138,6 @@ class ConceptDb:
                 """
             )
 
-        from collections import defaultdict
         concept_data: dict[str, dict[str, Any]] = defaultdict(lambda: {"date": None, "symbols": []})
         for r in stock_rows:
             concept_data[r["concept"]]["date"] = r["date"]
