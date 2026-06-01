@@ -3,8 +3,8 @@ import json
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from deepalpha.models.concept import ConceptStock, ConceptSummary
-from deepalpha.pipeline.concept.cache import ConceptCache
+from deepalpha.domain.concept.models import ConceptStock, ConceptSummary
+from deepalpha.infrastructure.cache.concept_cache import ConceptCache
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def mock_valkey():
 
 @pytest.fixture
 def cache(mock_valkey):
-    with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+    with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
         return ConceptCache(host="localhost", port=6379, password="", ssl=False)
 
 

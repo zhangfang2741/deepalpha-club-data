@@ -2,8 +2,8 @@ import datetime
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from deepalpha.models.concept import ConceptEtfMap, ConceptStock
-from deepalpha.pipeline.concept.db import ConceptDb
+from deepalpha.domain.concept.models import ConceptEtfMap, ConceptStock
+from deepalpha.infrastructure.db.concept_repo import ConceptRepo as ConceptDb
 
 
 def _make_mock_pool(mock_conn: AsyncMock) -> MagicMock:
@@ -66,7 +66,7 @@ async def test_upsert_stocks_serializes_etfs_as_comma_string():
 
     with patch("asyncpg.create_pool", AsyncMock(return_value=mock_pool)):
         async with ConceptDb("postgresql://test") as db:
-            await db.upsert_stocks(records)
+            await db.upsert_stocks(datetime.date(2026, 5, 31), records)
 
     call_args = mock_conn.executemany.call_args
     rows = call_args[0][1]
