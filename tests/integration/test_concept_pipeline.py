@@ -84,7 +84,7 @@ def mock_valkey() -> AsyncMock:
 @pytest.fixture
 def mock_cache(mock_valkey: AsyncMock) -> ConceptCache:
     """使用 mock valkey 的 ConceptCache 实例"""
-    with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+    with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
         return ConceptCache(host="localhost", port=6379, password="", ssl=False)
 
 
@@ -886,8 +886,8 @@ class TestTasks:
         ):
             with patch("deepalpha.providers.finnhub.client.FinnhubClient.__aexit__", AsyncMock()):
                 with patch("asyncpg.create_pool", AsyncMock(return_value=mock_db_pool)):
-                    with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
-                        with patch("deepalpha.pipeline.concept.tasks.update_holdings.ConceptCache") as MockCache:
+                    with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+                        with patch("deepalpha.infrastructure.cache.concept_cache.ConceptCache") as MockCache:
                             mock_cache_instance = AsyncMock()
                             MockCache.return_value = mock_cache_instance
 
@@ -918,7 +918,7 @@ class TestRouter:
 
         # Mock cache
         async def override_cache():
-            with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+            with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
                 cache = ConceptCache(
                     host=test_config.valkey_host,
                     port=test_config.valkey_port,
@@ -948,7 +948,7 @@ class TestRouter:
         app.include_router(router)
         app.dependency_overrides[get_config] = lambda: test_config
 
-        with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+        with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
             client = TestClient(app)
             resp = client.get("/concept/list")
 
@@ -976,7 +976,7 @@ class TestRouter:
         app.include_router(router)
         app.dependency_overrides[get_config] = lambda: test_config
 
-        with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+        with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
             with patch("asyncpg.create_pool", AsyncMock(return_value=mock_db_pool)):
                 client = TestClient(app)
                 resp = client.get("/concept/list")
@@ -998,7 +998,7 @@ class TestRouter:
         app.include_router(router)
         app.dependency_overrides[get_config] = lambda: test_config
 
-        with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+        with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
             client = TestClient(app)
             resp = client.get("/concept/Artificial%20Intelligence")
 
@@ -1019,7 +1019,7 @@ class TestRouter:
         app.include_router(router)
         app.dependency_overrides[get_config] = lambda: test_config
 
-        with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+        with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
             client = TestClient(app)
             resp = client.get("/concept/Artificial%20Intelligence?min_etf_count=2")
 
@@ -1043,7 +1043,7 @@ class TestRouter:
         app.include_router(router)
         app.dependency_overrides[get_config] = lambda: test_config
 
-        with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+        with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
             with patch("asyncpg.create_pool", AsyncMock(return_value=mock_db_pool)):
                 client = TestClient(app)
                 resp = client.get("/concept/UnknownConcept")
@@ -1156,11 +1156,11 @@ class TestEndToEnd:
         assert db_calls["upsert_etf_map"] > 0
 
         # 执行日度任务
-        with patch("deepalpha.pipeline.concept.cache.valkey_asyncio.Valkey", return_value=mock_valkey):
+        with patch("deepalpha.infrastructure.cache.concept_cache.valkey_asyncio.Valkey", return_value=mock_valkey):
             with patch("deepalpha.providers.finnhub.client.FinnhubClient.__aenter__", AsyncMock(return_value=mock_finnhub_client)):
                 with patch("deepalpha.providers.finnhub.client.FinnhubClient.__aexit__", AsyncMock()):
                     with patch("asyncpg.create_pool", AsyncMock(return_value=mock_db_pool)):
-                        with patch("deepalpha.pipeline.concept.tasks.update_holdings.ConceptCache") as MockCache:
+                        with patch("deepalpha.infrastructure.cache.concept_cache.ConceptCache") as MockCache:
                             mock_cache_instance = AsyncMock()
                             MockCache.return_value = mock_cache_instance
                             await update_holdings_run(test_config)
