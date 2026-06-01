@@ -2,9 +2,9 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from deepalpha.models.indicators import IndicatorRow
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.loaders.economics_loader import FMPEconomicsLoader
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.loaders.economics_loader import FMPEconomicsLoader
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ async def test_get_cpi_indicator_returns_list(httpx_mock: HTTPXMock, client):
 
 @pytest.mark.asyncio
 async def test_get_indicator_not_found_returns_empty_list(httpx_mock: HTTPXMock, client):
-    from deepalpha.providers.fmp.errors import FMPNotFoundError
+    from deepalpha.infrastructure.providers.fmp.errors import FMPNotFoundError
     httpx_mock.add_exception(FMPNotFoundError("not found"))
     loader = FMPEconomicsLoader(client)
     result = await loader.get_indicator("UNKNOWN")

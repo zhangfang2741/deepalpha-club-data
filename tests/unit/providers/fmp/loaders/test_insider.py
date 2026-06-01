@@ -2,9 +2,9 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from deepalpha.models.insider import InsiderStatistics, InsiderTrade
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.loaders.insider_loader import FMPInsiderTradeLoader
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.loaders.insider_loader import FMPInsiderTradeLoader
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ async def test_get_insider_trades_by_symbol(httpx_mock: HTTPXMock, client):
 
 @pytest.mark.asyncio
 async def test_get_insider_trades_not_found_returns_empty_list(httpx_mock: HTTPXMock, client):
-    from deepalpha.providers.fmp.errors import FMPNotFoundError
+    from deepalpha.infrastructure.providers.fmp.errors import FMPNotFoundError
     httpx_mock.add_exception(FMPNotFoundError("not found"))
     loader = FMPInsiderTradeLoader(client)
     result = await loader.get_insider_trades(symbol="UNKN")

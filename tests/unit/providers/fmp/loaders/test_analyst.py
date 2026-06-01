@@ -1,10 +1,10 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.models.analyst import AnalystRating, Estimate, PriceTarget
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.loaders.analyst_loader import FMPAnalystLoader
+from deepalpha.domain.analyst.models import AnalystRating, Estimate, PriceTarget
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.loaders.analyst_loader import FMPAnalystLoader
 
 
 @pytest.fixture

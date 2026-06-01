@@ -3,11 +3,11 @@ import datetime
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.loaders.enums import AssetClass
-from deepalpha.models.market import PriceBar, Quote
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.loaders.market_loader import FMPMarketLoader
+from deepalpha.domain.market.enums import AssetClass
+from deepalpha.domain.market.models import PriceBar, Quote
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.loaders.market_loader import FMPMarketLoader
 
 
 @pytest.fixture

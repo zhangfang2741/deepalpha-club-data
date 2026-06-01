@@ -1,12 +1,12 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.loaders.enums import IndicatorType, Interval
+from deepalpha.domain.market.enums import IndicatorType, Interval
 from deepalpha.models.indicators import IndicatorRow
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.errors import FMPError
-from deepalpha.providers.fmp.loaders.indicators_loader import FMPTechnicalIndicatorLoader
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.errors import FMPError
+from deepalpha.infrastructure.providers.fmp.loaders.indicators_loader import FMPTechnicalIndicatorLoader
 
 
 @pytest.fixture

@@ -2,9 +2,9 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from deepalpha.models.news import NewsArticle
-from deepalpha.providers.fmp.client import FMPAsyncClient
-from deepalpha.providers.fmp.config import FMPConfig
-from deepalpha.providers.fmp.loaders.news_loader import FMPNewsLoader
+from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
+from deepalpha.infrastructure.providers.fmp.config import FMPConfig
+from deepalpha.infrastructure.providers.fmp.loaders.news_loader import FMPNewsLoader
 
 
 @pytest.fixture
