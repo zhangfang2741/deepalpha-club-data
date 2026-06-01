@@ -2,7 +2,7 @@ import datetime
 import pytest
 from unittest.mock import AsyncMock
 
-from deepalpha.application.agent.tools import dispatch_tool, TOOLS
+from deepalpha.application.agent.tools import dispatch_tool, build_tools, Services
 from deepalpha.domain.concept.models import ConceptStock
 from deepalpha.domain.market.models import Quote
 
@@ -49,6 +49,9 @@ async def test_get_quote_returns_price_info():
 
 
 def test_tools_list_has_four_entries():
-    assert len(TOOLS) == 4
-    names = {t["name"] for t in TOOLS}
+    from unittest.mock import MagicMock
+    svc = MagicMock(spec=Services)
+    tools = build_tools(svc)
+    assert len(tools) == 4
+    names = {t.name for t in tools}
     assert names == {"search_concept", "get_quote", "get_financials", "generate_report"}

@@ -1,9 +1,12 @@
-import { createAnthropic } from '@ai-sdk/anthropic'
+import { createOpenAI } from '@ai-sdk/openai'
 import { streamText, tool, stepCountIs } from 'ai'
 import { z } from 'zod/v4'
 import { getConceptList, getConceptStocks, getQuote } from '@/lib/api'
 
-const anthropic = createAnthropic()
+const minimax = createOpenAI({
+  apiKey: process.env.MINIMAX_API_KEY!,
+  baseURL: 'https://api.minimax.io/v1',
+})
 
 const SYSTEM = `你是 DeepAlpha 投研助手，专注于美股市场分析。
 
@@ -18,7 +21,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json()
 
   const result = await streamText({
-    model: anthropic('claude-sonnet-4-6'),
+    model: minimax('MiniMax-Text-01'),
     system: SYSTEM,
     messages,
     stopWhen: stepCountIs(5),
