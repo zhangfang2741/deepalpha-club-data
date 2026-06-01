@@ -1,4 +1,4 @@
-from deepalpha.pipeline.concept.etfdb_scraper import (
+from deepalpha.infrastructure.providers.etfdb.scraper import (
     _parse_etf_symbols,
     _parse_theme_slugs,
 )
