@@ -22,6 +22,8 @@ dependencies = [
     "requests-ratelimiter",
     "asyncpg>=0.29.0",
     "valkey>=6.0.0",
+    "anthropic>=0.40.0",
+    "sse-starlette>=2.0",
 ]
 
 [project.optional-dependencies]
