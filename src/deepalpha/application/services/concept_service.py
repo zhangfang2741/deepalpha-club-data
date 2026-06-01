@@ -1,7 +1,7 @@
 """概念股池业务逻辑服务"""
 import datetime
 
-from deepalpha.domain.concept.models import ConceptStock, ConceptSummary
+from deepalpha.domain.concept.models import ConceptEtfMap, ConceptStock, ConceptSummary
 from deepalpha.domain.concept.protocols import IConceptCache, IConceptRepo
 
 
@@ -27,6 +27,9 @@ class ConceptService:
         if summaries:
             await self._cache.set_list(summaries)
         return summaries
+
+    async def get_concept_etfs(self, name: str) -> list[ConceptEtfMap]:
+        return await self._repo.get_etfs_by_concept(name)
 
     async def get_concept_history(
         self, name: str, start: datetime.date, end: datetime.date

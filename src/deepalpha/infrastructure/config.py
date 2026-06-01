@@ -26,6 +26,7 @@ class ConceptPipelineConfig(BaseSettings):
     valkey_ssl: bool = Field(False, title="是否启用 Valkey SSL")
 
     finnhub_api_key: str = Field(title="Finnhub API Key")
+    minimax_api_key: str = Field("", title="MiniMax API Key")
 
     concept_cache_ttl: int = Field(172800, title="缓存 TTL（秒）", description="默认 2 天")
     concept_aum_threshold_million: float = Field(100.0, title="AUM 过滤阈值（百万美元）")

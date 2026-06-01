@@ -11,16 +11,27 @@ from fastapi import FastAPI
 from deepalpha.application.agent.runner import AgentRunner
 from deepalpha.application.agent.tools import Services
 from deepalpha.application.services.analyst_service import AnalystService
+from deepalpha.application.services.calendar_service import CalendarService
+from deepalpha.application.services.company_service import CompanyService
 from deepalpha.application.services.concept_service import ConceptService
 from deepalpha.application.services.financial_service import FinancialService
+from deepalpha.application.services.insider_service import InsiderService
 from deepalpha.application.services.market_service import MarketService
+from deepalpha.application.services.news_service import NewsService
+from deepalpha.application.services.performance_service import PerformanceService
 from deepalpha.infrastructure.cache.concept_cache import ConceptCache
 from deepalpha.infrastructure.db.concept_repo import ConceptRepo
 from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.analyst_loader import FMPAnalystLoader
+from deepalpha.infrastructure.providers.fmp.loaders.calendar_loader import FMPCalendarLoader
+from deepalpha.infrastructure.providers.fmp.loaders.company_loader import FMPCompanyLoader
 from deepalpha.infrastructure.providers.fmp.loaders.financial_loader import FMPFinancialLoader
+from deepalpha.infrastructure.providers.fmp.loaders.insider_loader import FMPInsiderTradeLoader
+from deepalpha.infrastructure.providers.fmp.loaders.congress_loader import FMPCongressTradeLoader
 from deepalpha.infrastructure.providers.fmp.loaders.market_loader import FMPMarketLoader
+from deepalpha.infrastructure.providers.fmp.loaders.news_loader import FMPNewsLoader
+from deepalpha.infrastructure.providers.fmp.loaders.performance_loader import FMPMarketPerformanceLoader
 from deepalpha.infrastructure.config import ConceptPipelineConfig
 
 
@@ -48,16 +59,25 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
 
     repo = ConceptRepo(cfg.asyncpg_dsn())
-    repo._pool = _pool  # 复用已创建的连接池
+    repo._pool = _pool
+    await repo.initialize()
 
     fmp_cfg = FMPConfig()
-    fmp_client = FMPAsyncClient(fmp_cfg)
+    fmp = FMPAsyncClient(fmp_cfg)
 
     _services = Services(
         concept=ConceptService(repo, _cache),
-        market=MarketService(FMPMarketLoader(fmp_client)),
-        financial=FinancialService(FMPFinancialLoader(fmp_client)),
-        analyst=AnalystService(FMPAnalystLoader(fmp_client)),
+        market=MarketService(FMPMarketLoader(fmp)),
+        financial=FinancialService(FMPFinancialLoader(fmp)),
+        analyst=AnalystService(FMPAnalystLoader(fmp)),
+        company=CompanyService(FMPCompanyLoader(fmp)),
+        news=NewsService(FMPNewsLoader(fmp)),
+        performance=PerformanceService(FMPMarketPerformanceLoader(fmp)),
+        insider=InsiderService(
+            insider=FMPInsiderTradeLoader(fmp),
+            congress=FMPCongressTradeLoader(fmp),
+        ),
+        calendar=CalendarService(FMPCalendarLoader(fmp)),
     )
 
     yield

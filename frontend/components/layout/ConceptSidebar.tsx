@@ -3,46 +3,103 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useConceptList } from '@/hooks/use-concept'
-import { cn } from '@/lib/utils'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export function ConceptSidebar() {
   const pathname = usePathname()
   const { data: concepts, isLoading } = useConceptList()
 
   return (
-    <nav className="p-2 space-y-0.5">
-      <p className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-        概念分类
-      </p>
+    <nav className="flex flex-col h-full py-3">
 
-      {isLoading &&
-        Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-7 w-full rounded-md mb-1" />
-        ))}
+      {/* 标题 */}
+      <div className="px-4 pb-3">
+        <p
+          className="text-[10px] font-semibold tracking-[0.15em] uppercase"
+          style={{ color: 'rgb(72,90,130)' }}
+        >
+          投资主题
+        </p>
+      </div>
 
-      {concepts?.map(c => {
-        const href = `/concept/${encodeURIComponent(c.concept)}`
-        const active = pathname === href
-        return (
-          <Link
-            key={c.concept}
-            href={href}
-            className={cn(
-              'flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-colors',
-              'hover:bg-accent hover:text-accent-foreground',
-              active
-                ? 'bg-accent text-accent-foreground font-medium'
-                : 'text-muted-foreground'
-            )}
-          >
-            <span className="truncate max-w-[130px]">{c.concept}</span>
-            <span className="text-[10px] text-muted-foreground tabular-nums ml-1 shrink-0">
-              {c.stock_count}
-            </span>
-          </Link>
-        )
-      })}
+      {/* 概念列表 */}
+      <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
+
+        {isLoading && (
+          Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-8 rounded skeleton-shimmer mb-1"
+              style={{ opacity: 1 - i * 0.08 }}
+            />
+          ))
+        )}
+
+        {concepts?.map(c => {
+          const href = `/concept/${encodeURIComponent(c.concept)}`
+          const active = pathname === href
+          const label = c.concept_name_zh ?? c.concept
+
+          // 规模指示：stock_count 映射到圆点大小
+          const dotSize = c.stock_count > 80 ? 6 : c.stock_count > 40 ? 5 : 4
+
+          return (
+            <Link
+              key={c.concept}
+              href={href}
+              className="flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all duration-150 group"
+              style={{
+                background: active ? 'rgba(34,211,238,0.08)' : 'transparent',
+                borderLeft: active
+                  ? '2px solid rgb(34,211,238)'
+                  : '2px solid transparent',
+                color: active
+                  ? 'rgb(34,211,238)'
+                  : 'rgb(140,160,200)',
+              }}
+            >
+              <span
+                className="truncate text-xs font-medium"
+                style={{
+                  fontFamily: 'var(--font-figtree)',
+                  color: active ? 'rgb(34,211,238)' : undefined,
+                }}
+              >
+                {label}
+              </span>
+
+              <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                <span
+                  className="text-[9px] tabular-nums"
+                  style={{
+                    fontFamily: 'var(--font-ibm-mono)',
+                    color: active ? 'rgba(34,211,238,0.7)' : 'rgb(72,90,130)',
+                  }}
+                >
+                  {c.stock_count}
+                </span>
+                <span
+                  className="rounded-full shrink-0"
+                  style={{
+                    width: dotSize,
+                    height: dotSize,
+                    background: active
+                      ? 'rgb(34,211,238)'
+                      : 'rgba(99,130,190,0.3)',
+                    boxShadow: active ? '0 0 6px rgba(34,211,238,0.5)' : undefined,
+                  }}
+                />
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* 底部版权 */}
+      <div className="px-4 pt-3 border-t" style={{ borderColor: 'rgba(99,130,190,0.08)' }}>
+        <p className="text-[9px]" style={{ color: 'rgb(42,55,80)' }}>
+          数据来源 Yahoo Finance · Morningstar
+        </p>
+      </div>
     </nav>
   )
 }

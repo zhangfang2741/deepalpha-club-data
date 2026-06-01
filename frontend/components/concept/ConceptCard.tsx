@@ -6,7 +6,12 @@ export function ConceptCard({ summary }: { summary: ConceptSummary }) {
   return (
     <Card className="hover:border-accent transition-colors">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium truncate">{summary.concept}</CardTitle>
+        <CardTitle className="text-sm font-medium truncate">
+          {summary.concept_name_zh ?? summary.concept}
+        </CardTitle>
+        {summary.concept_name_zh && (
+          <p className="text-xs text-muted-foreground truncate">{summary.concept}</p>
+        )}
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex gap-3 text-xs text-muted-foreground">

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from deepalpha.application.services.concept_service import ConceptService
 from deepalpha.application.agent.tools import Services
-from deepalpha.domain.concept.models import ConceptStock, ConceptSummary
+from deepalpha.domain.concept.models import ConceptEtfMap, ConceptStock, ConceptSummary
 from deepalpha.interface.web.deps import get_services
 
 router = APIRouter(prefix="/concept", tags=["concept"])
@@ -21,6 +21,17 @@ async def list_concepts(
     svc: Annotated[ConceptService, Depends(_get_concept_svc)],
 ) -> list[ConceptSummary]:
     return await svc.list_summaries()
+
+
+@router.get("/{name}/etfs", response_model=list[ConceptEtfMap])
+async def get_concept_etfs(
+    name: str,
+    svc: Annotated[ConceptService, Depends(_get_concept_svc)],
+) -> list[ConceptEtfMap]:
+    etfs = await svc.get_concept_etfs(name)
+    if not etfs:
+        raise HTTPException(status_code=404, detail=f"概念 '{name}' 不存在")
+    return etfs
 
 
 @router.get("/{name}", response_model=list[ConceptStock])

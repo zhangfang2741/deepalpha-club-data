@@ -15,12 +15,15 @@ from deepalpha.domain.concept.models import ConceptEtfMap, ConceptStock, Concept
 
 _CREATE_TABLES_SQL = """
 CREATE TABLE IF NOT EXISTS concept_etf_map (
-    concept        VARCHAR(100) NOT NULL,
-    etf_symbol     VARCHAR(20)  NOT NULL,
-    etf_name       VARCHAR(200),
-    aum_million    FLOAT,
-    etfdb_slug     VARCHAR(100),
-    updated_at     DATE         NOT NULL,
+    concept          VARCHAR(100) NOT NULL,
+    etf_symbol       VARCHAR(20)  NOT NULL,
+    etf_name         VARCHAR(200),
+    aum_million      FLOAT,
+    etfdb_slug       VARCHAR(100),
+    updated_at       DATE         NOT NULL,
+    concept_name_zh  VARCHAR(100),
+    etf_name_zh      VARCHAR(200),
+    description_zh   TEXT,
     PRIMARY KEY (concept, etf_symbol)
 );
 
@@ -47,15 +50,47 @@ class ConceptRepo:
         self._dsn = dsn
         self._pool: asyncpg.Pool | None = None  # type: ignore[type-arg]
 
-    async def __aenter__(self) -> "ConceptRepo":
-        self._pool = await asyncpg.create_pool(self._dsn)
+    async def initialize(self) -> None:
+        """创建所需数据表（幂等）。复用外部连接池时应在启动时显式调用。"""
+        assert self._pool is not None
         async with self._pool.acquire() as conn:
             await conn.execute(_CREATE_TABLES_SQL)
+            # 幂等添加新列（已存在时静默忽略）
+            for col, typedef in [
+                ("concept_name_zh", "VARCHAR(100)"),
+                ("etf_name_zh", "VARCHAR(200)"),
+                ("description_zh", "TEXT"),
+            ]:
+                await conn.execute(
+                    f"ALTER TABLE concept_etf_map ADD COLUMN IF NOT EXISTS {col} {typedef}"
+                )
+
+    async def __aenter__(self) -> "ConceptRepo":
+        self._pool = await asyncpg.create_pool(self._dsn)
+        await self.initialize()
         return self
 
     async def __aexit__(self, *_: Any) -> None:
         if self._pool:
             await self._pool.close()
+
+    async def replace_etf_map(self, records: list[ConceptEtfMap]) -> None:
+        """全量替换 concept_etf_map：清空旧数据后重新写入。"""
+        assert self._pool is not None
+        async with self._pool.acquire() as conn:
+            async with conn.transaction():
+                await conn.execute("TRUNCATE TABLE concept_etf_map")
+                if records:
+                    await conn.executemany(
+                        """
+                        INSERT INTO concept_etf_map
+                            (concept, etf_symbol, etf_name, aum_million, etfdb_slug, updated_at,
+                             concept_name_zh, etf_name_zh, description_zh)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                        """,
+                        [(r.concept, r.etf_symbol, r.etf_name, r.aum_million, r.etfdb_slug, r.updated_at,
+                          r.concept_name_zh, r.etf_name_zh, r.description_zh) for r in records],
+                    )
 
     async def upsert_etf_map(self, records: list[ConceptEtfMap]) -> None:
         assert self._pool is not None
@@ -77,7 +112,9 @@ class ConceptRepo:
         assert self._pool is not None
         async with self._pool.acquire() as conn:
             rows = await conn.fetch(
-                "SELECT concept, etf_symbol, etf_name, aum_million, etfdb_slug, updated_at FROM concept_etf_map"
+                """SELECT concept, etf_symbol, etf_name, aum_million, etfdb_slug, updated_at,
+                          concept_name_zh, etf_name_zh, description_zh
+                   FROM concept_etf_map"""
             )
         return [
             ConceptEtfMap(
@@ -87,6 +124,35 @@ class ConceptRepo:
                 aum_million=r["aum_million"],
                 etfdb_slug=r["etfdb_slug"],
                 updated_at=r["updated_at"],
+                concept_name_zh=r["concept_name_zh"],
+                etf_name_zh=r["etf_name_zh"],
+                description_zh=r["description_zh"],
+            )
+            for r in rows
+        ]
+
+    async def get_etfs_by_concept(self, concept: str) -> list[ConceptEtfMap]:
+        """获取某概念下所有 ETF（含中文翻译）。"""
+        assert self._pool is not None
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """SELECT concept, etf_symbol, etf_name, aum_million, etfdb_slug, updated_at,
+                          concept_name_zh, etf_name_zh, description_zh
+                   FROM concept_etf_map WHERE concept = $1
+                   ORDER BY aum_million DESC NULLS LAST""",
+                concept,
+            )
+        return [
+            ConceptEtfMap(
+                concept=r["concept"],
+                etf_symbol=r["etf_symbol"],
+                etf_name=r["etf_name"],
+                aum_million=r["aum_million"],
+                etfdb_slug=r["etfdb_slug"],
+                updated_at=r["updated_at"],
+                concept_name_zh=r["concept_name_zh"],
+                etf_name_zh=r["etf_name_zh"],
+                description_zh=r["description_zh"],
             )
             for r in rows
         ]
@@ -133,9 +199,12 @@ class ConceptRepo:
         assert self._pool is not None
         async with self._pool.acquire() as conn:
             etf_rows = await conn.fetch(
-                "SELECT concept, COUNT(*) as cnt FROM concept_etf_map GROUP BY concept"
+                """SELECT concept, COUNT(*) as cnt,
+                          MAX(concept_name_zh) as concept_name_zh
+                   FROM concept_etf_map GROUP BY concept"""
             )
             etf_counts = {r["concept"]: r["cnt"] for r in etf_rows}
+            concept_name_zh_map = {r["concept"]: r["concept_name_zh"] for r in etf_rows}
 
             stock_rows = await conn.fetch(
                 """
@@ -157,6 +226,7 @@ class ConceptRepo:
         return [
             ConceptSummary(
                 concept=concept,
+                concept_name_zh=concept_name_zh_map.get(concept),
                 etf_count=etf_counts.get(concept, 0),
                 stock_count=len(data["symbols"]),
                 top_symbols=data["symbols"][:5],

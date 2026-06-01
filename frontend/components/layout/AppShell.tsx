@@ -1,47 +1,84 @@
-// components/layout/AppShell.tsx
 'use client'
 
-import { useState } from 'react'
-import { ConceptSidebar } from './ConceptSidebar'
+import { VizProvider } from '@/lib/viz-context'
 import { ChatPanel } from './ChatPanel'
-import { Separator } from '@/components/ui/separator'
+import { VizPanel } from '../viz/VizPanel'
 
-export function AppShell({ children }: { children: React.ReactNode }) {
-  const [chatOpen, setChatOpen] = useState(true)
-
+export function AppShell({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="flex h-screen flex-col">
-      {/* 顶栏 */}
-      <header className="flex h-12 shrink-0 items-center border-b px-4 gap-6">
-        <span className="font-bold text-amber-400 tracking-tight">DeepAlpha</span>
-        <Separator orientation="vertical" className="h-5" />
-        <nav className="flex gap-4 text-sm text-muted-foreground">
-          <span className="text-foreground font-medium">概念股池</span>
-        </nav>
-        <button
-          onClick={() => setChatOpen(v => !v)}
-          className="ml-auto text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+    <VizProvider>
+      <div className="flex h-screen flex-col relative z-10">
+
+        {/* ── 顶栏 ── */}
+        <header
+          className="flex h-12 shrink-0 items-center px-5 gap-4"
+          style={{
+            background: 'rgba(8,14,30,0.97)',
+            borderBottom: '1px solid rgba(99,130,190,0.12)',
+            backdropFilter: 'blur(12px)',
+          }}
         >
-          {chatOpen ? '收起助手 ✕' : '▶ AI 助手'}
-        </button>
-      </header>
+          <div className="flex items-center gap-2.5">
+            <div
+              className="h-6 w-6 rounded flex items-center justify-center text-[10px] font-bold"
+              style={{
+                background: 'linear-gradient(135deg, rgb(34,211,238), rgb(129,140,248))',
+                color: 'rgb(8,14,30)',
+                fontFamily: 'var(--font-bricolage)',
+              }}
+            >
+              Dα
+            </div>
+            <span
+              className="text-sm font-semibold tracking-tight"
+              style={{ fontFamily: 'var(--font-bricolage)', color: 'rgb(225,235,255)' }}
+            >
+              DeepAlpha
+            </span>
+          </div>
 
-      {/* 三栏主体 */}
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-52 shrink-0 border-r overflow-y-auto">
-          <ConceptSidebar />
-        </aside>
+          <div className="h-4 w-px mx-1" style={{ background: 'rgba(99,130,190,0.2)' }} />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+          <span className="text-xs" style={{ color: 'rgb(72,90,130)' }}>
+            美股投研平台
+          </span>
 
-        {chatOpen && (
-          <aside className="w-80 shrink-0 border-l flex flex-col">
+          <div className="ml-auto flex items-center gap-2">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{
+                background: 'rgb(52,211,153)',
+                boxShadow: '0 0 6px rgba(52,211,153,0.6)',
+                animation: 'pulse-dot 2.5s ease-in-out infinite',
+              }}
+            />
+            <span className="text-[10px]" style={{ color: 'rgb(72,90,130)' }}>
+              实时数据
+            </span>
+          </div>
+        </header>
+
+        {/* ── 主体两栏 ── */}
+        <div className="flex flex-1 overflow-hidden">
+
+          {/* 左：聊天面板（固定宽度）*/}
+          <div
+            className="w-[420px] shrink-0 flex flex-col"
+            style={{
+              background: 'rgb(8,14,30)',
+              borderRight: '1px solid rgba(99,130,190,0.10)',
+            }}
+          >
             <ChatPanel />
-          </aside>
-        )}
+          </div>
+
+          {/* 右：可视化面板（蜡烛图 + 动态结果）*/}
+          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+            <VizPanel />
+          </div>
+
+        </div>
       </div>
-    </div>
+    </VizProvider>
   )
 }

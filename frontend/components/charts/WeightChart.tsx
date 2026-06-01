@@ -6,17 +6,25 @@ import {
 } from 'recharts'
 import type { ConceptStock } from '@/lib/types'
 
+const COLORS = [
+  '#fbbf24', '#22d3ee', '#34d399',
+  '#a78bfa', '#fb7185', '#60a5fa',
+  '#f97316', '#4ade80', '#e879f9',
+  '#94a3b8', '#818cf8', '#2dd4bf',
+  '#facc15', '#38bdf8', '#86efac',
+]
+
 export function WeightChart({ stocks, limit = 15 }: { stocks: ConceptStock[]; limit?: number }) {
   const data = stocks
     .slice(0, limit)
     .map(s => ({ symbol: s.symbol, weight: +s.total_weight.toFixed(1) }))
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
+    <ResponsiveContainer width="100%" height={240}>
+      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 4 }}>
         <XAxis
           type="number"
-          tick={{ fontSize: 11, fill: '#6b7280' }}
+          tick={{ fontSize: 10, fill: 'rgb(72,90,130)', fontFamily: 'var(--font-ibm-mono)' }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v: number) => `${v}%`}
@@ -24,24 +32,26 @@ export function WeightChart({ stocks, limit = 15 }: { stocks: ConceptStock[]; li
         <YAxis
           type="category"
           dataKey="symbol"
-          width={56}
-          tick={{ fontSize: 11, fill: '#6ee7b7', fontFamily: 'monospace' }}
+          width={52}
+          tick={{ fontSize: 10, fill: 'rgb(34,211,238)', fontFamily: 'var(--font-ibm-mono)' }}
           tickLine={false}
           axisLine={false}
         />
         <Tooltip
           formatter={(v: unknown) => [`${v}%`, '合计权重']}
           contentStyle={{
-            fontSize: 12,
-            background: 'hsl(222 47% 7%)',
-            border: '1px solid hsl(217 33% 14%)',
+            fontSize: 11,
+            background: 'rgb(13,22,46)',
+            border: '1px solid rgba(99,130,190,0.2)',
             borderRadius: 6,
+            color: 'rgb(225,235,255)',
+            fontFamily: 'var(--font-ibm-mono)',
           }}
-          cursor={{ fill: 'hsl(217 33% 12%)' }}
+          cursor={{ fill: 'rgba(34,211,238,0.04)' }}
         />
-        <Bar dataKey="weight" radius={[0, 3, 3, 0]} maxBarSize={16}>
+        <Bar dataKey="weight" radius={[0, 3, 3, 0]} maxBarSize={14}>
           {data.map((_, i) => (
-            <Cell key={i} fill={i === 0 ? '#f59e0b' : '#34d399'} />
+            <Cell key={i} fill={COLORS[i % COLORS.length]} opacity={0.85} />
           ))}
         </Bar>
       </BarChart>
