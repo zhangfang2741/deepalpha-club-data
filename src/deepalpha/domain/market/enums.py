@@ -1,8 +1,6 @@
 """市场领域枚举（domain 层，零外部依赖）"""
 from enum import Enum
 
-from deepalpha.domain.financial.enums import StatementPeriod  # noqa: F401
-
 
 class AssetClass(str, Enum):
     """资产类别枚举，用于区分不同市场标的类型。"""
