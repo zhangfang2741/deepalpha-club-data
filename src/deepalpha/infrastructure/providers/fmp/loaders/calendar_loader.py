@@ -1,7 +1,7 @@
 import datetime
 
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.calendar import DividendEvent, EarningsEvent, IPOEvent, SplitEvent
+from deepalpha.domain.market.models import DividendEvent, EarningsEvent, IPOEvent, SplitEvent
 
 
 class FMPCalendarLoader(BaseLoader):

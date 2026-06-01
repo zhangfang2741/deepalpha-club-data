@@ -1,11 +1,11 @@
 # tests/unit/models/test_enums.py
-from deepalpha.loaders.enums import (
+from deepalpha.domain.market.enums import (
     AssetClass,
     IndicatorType,
     Interval,
-    StatementPeriod,
 )
-from deepalpha.providers.fmp.errors import (
+from deepalpha.domain.financial.enums import StatementPeriod
+from deepalpha.infrastructure.providers.fmp.errors import (
     FMPAuthError,
     FMPError,
     FMPNotFoundError,

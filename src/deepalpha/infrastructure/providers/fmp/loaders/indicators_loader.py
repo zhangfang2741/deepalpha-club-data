@@ -3,7 +3,7 @@ from typing import Any
 
 from deepalpha.domain.market.enums import IndicatorType, Interval
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.indicators import IndicatorRow
+from deepalpha.domain.market.models import IndicatorRow
 from deepalpha.infrastructure.providers.fmp.errors import FMPError
 
 _FMP_INDICATOR_PATHS: dict[IndicatorType, str] = {

@@ -2,7 +2,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from deepalpha.domain.market.enums import MoverDirection
-from deepalpha.models.performance import MarketMover, SectorPE, SectorPerformance
+from deepalpha.domain.market.models import MarketMover, SectorPE, SectorPerformance
 from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.performance_loader import FMPMarketPerformanceLoader

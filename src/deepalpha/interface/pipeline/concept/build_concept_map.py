@@ -8,7 +8,7 @@
 import asyncio
 import logging
 
-from deepalpha.pipeline.concept.config import ConceptPipelineConfig
+from deepalpha.infrastructure.config import ConceptPipelineConfig
 from deepalpha.infrastructure.db.concept_repo import ConceptRepo
 from deepalpha.infrastructure.providers.etfdb.scraper import scrape_concept_etf_candidates
 from deepalpha.infrastructure.providers.finnhub.etf_loader import filter_etfs_by_aum

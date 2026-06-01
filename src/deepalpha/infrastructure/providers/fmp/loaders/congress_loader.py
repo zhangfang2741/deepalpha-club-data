@@ -1,6 +1,6 @@
 from deepalpha.domain.market.enums import CongressChamber
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.congress import CongressTrade
+from deepalpha.domain.governance.models import CongressTrade
 
 
 class FMPCongressTradeLoader(BaseLoader):

@@ -1,3 +1,9 @@
+"""
+基础设施层全局配置
+
+从环境变量（或 .env 文件）中读取所有外部服务的连接参数。
+"""
+
 from urllib.parse import quote
 
 from pydantic import Field

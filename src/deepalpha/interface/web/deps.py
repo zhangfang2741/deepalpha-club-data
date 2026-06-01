@@ -21,7 +21,7 @@ from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.analyst_loader import FMPAnalystLoader
 from deepalpha.infrastructure.providers.fmp.loaders.financial_loader import FMPFinancialLoader
 from deepalpha.infrastructure.providers.fmp.loaders.market_loader import FMPMarketLoader
-from deepalpha.pipeline.concept.config import ConceptPipelineConfig
+from deepalpha.infrastructure.config import ConceptPipelineConfig
 
 
 @lru_cache(maxsize=1)

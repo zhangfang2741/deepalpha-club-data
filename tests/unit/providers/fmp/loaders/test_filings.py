@@ -1,7 +1,7 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.models.filings import SecCompanyProfile, SecFiling
+from deepalpha.domain.governance.models import SecCompanyProfile, SecFiling
 from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.filings_loader import FMPSecFilingLoader

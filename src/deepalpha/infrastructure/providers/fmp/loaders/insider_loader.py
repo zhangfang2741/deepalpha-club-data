@@ -1,5 +1,5 @@
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.insider import InsiderStatistics, InsiderTrade
+from deepalpha.domain.governance.models import InsiderStatistics, InsiderTrade
 
 
 class FMPInsiderTradeLoader(BaseLoader):

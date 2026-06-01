@@ -4,7 +4,7 @@ import datetime
 
 from deepalpha.domain.market.enums import MoverDirection
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.performance import MarketMover, SectorPE, SectorPerformance
+from deepalpha.domain.market.models import MarketMover, SectorPE, SectorPerformance
 
 _MOVER_PATHS: dict[MoverDirection, str] = {
     MoverDirection.GAINERS: "biggest-gainers",

@@ -2,7 +2,7 @@ import datetime
 
 from deepalpha.domain.market.enums import Interval
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.indicators import IndicatorRow
+from deepalpha.domain.market.models import IndicatorRow
 
 _FMP_SUPPORTED: list[str] = [
     "CPI", "GDP", "REAL_GDP", "UNEMPLOYMENT",

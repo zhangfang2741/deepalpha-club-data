@@ -1,7 +1,7 @@
 import pytest
 from pytest_httpx import HTTPXMock
 
-from deepalpha.models.insider import InsiderStatistics, InsiderTrade
+from deepalpha.domain.governance.models import InsiderStatistics, InsiderTrade
 from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.insider_loader import FMPInsiderTradeLoader

@@ -2,7 +2,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from deepalpha.domain.market.enums import CongressChamber
-from deepalpha.models.congress import CongressTrade
+from deepalpha.domain.governance.models import CongressTrade
 from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.congress_loader import FMPCongressTradeLoader

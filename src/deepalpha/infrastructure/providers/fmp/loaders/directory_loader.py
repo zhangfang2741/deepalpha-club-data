@@ -1,6 +1,6 @@
 from deepalpha.domain.market.enums import AssetClass
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.directory import ExchangeInfo, SymbolInfo
+from deepalpha.domain.market.models import ExchangeInfo, SymbolInfo
 
 _SYMBOL_PATHS: dict[AssetClass, str] = {
     AssetClass.STOCK:       "actively-trading-list",

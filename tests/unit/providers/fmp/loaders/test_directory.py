@@ -2,7 +2,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from deepalpha.domain.market.enums import AssetClass
-from deepalpha.models.directory import ExchangeInfo, SymbolInfo
+from deepalpha.domain.market.models import ExchangeInfo, SymbolInfo
 from deepalpha.infrastructure.providers.fmp.client import FMPAsyncClient
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.loaders.directory_loader import FMPDirectoryLoader

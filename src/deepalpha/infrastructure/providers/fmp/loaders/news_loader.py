@@ -5,7 +5,7 @@ from typing import Any
 
 from deepalpha.domain.market.enums import AssetClass
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.news import NewsArticle
+from deepalpha.domain.news.models import NewsArticle
 
 _ASSET_CLASS_PATHS: dict[AssetClass, str] = {
     AssetClass.CRYPTO: "news/crypto",

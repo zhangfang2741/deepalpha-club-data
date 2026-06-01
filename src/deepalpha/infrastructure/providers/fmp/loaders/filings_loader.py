@@ -1,7 +1,7 @@
 import datetime
 
 from deepalpha.infrastructure.providers.base import BaseLoader
-from deepalpha.models.filings import SecCompanyProfile, SecFiling
+from deepalpha.domain.governance.models import SecCompanyProfile, SecFiling
 
 _DEFAULT_LOOKBACK_YEARS = 3
 

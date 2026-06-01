@@ -10,7 +10,7 @@ import datetime
 import logging
 from collections import defaultdict
 
-from deepalpha.pipeline.concept.config import ConceptPipelineConfig
+from deepalpha.infrastructure.config import ConceptPipelineConfig
 from deepalpha.infrastructure.cache.concept_cache import ConceptCache
 from deepalpha.infrastructure.db.concept_repo import ConceptRepo
 from deepalpha.infrastructure.providers.finnhub.etf_loader import (

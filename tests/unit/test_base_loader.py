@@ -4,8 +4,8 @@ import polars as pl
 import pytest
 from pydantic import BaseModel
 
-from deepalpha.loaders.base import BaseLoader
-from deepalpha.models.insider import InsiderTrade
+from deepalpha.infrastructure.providers.base import BaseLoader
+from deepalpha.domain.governance.models import InsiderTrade
 
 
 class _ConcreteLoader(BaseLoader):
