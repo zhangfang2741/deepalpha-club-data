@@ -419,19 +419,32 @@ class TestEtfdbScraper:
     @pytest.mark.asyncio
     async def test_scrape_concept_etf_candidates_flow(self):
         """端到端抓取流程（mock HTTP）"""
-        mock_response = AsyncMock()
-        mock_response.text = self.THEMES_HTML
-        mock_response.raise_for_status = MagicMock()
+        # 主题列表响应
+        mock_list_response = AsyncMock()
+        mock_list_response.text = self.THEMES_HTML
+        mock_list_response.raise_for_status = MagicMock()
+
+        # 主题详情响应（每个主题返回 ETF 列表）
+        mock_etf_response = AsyncMock()
+        mock_etf_response.text = self.ETF_LIST_HTML
+        mock_etf_response.raise_for_status = MagicMock()
 
         mock_client = AsyncMock()
-        mock_client.get = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock()
+        
+        async def mock_get(url, **kwargs):
+            if "/etfs/themes/" in url:
+                return mock_list_response
+            return mock_etf_response
+        mock_client.get = mock_get
         mock_client.aclose = AsyncMock()
 
-        with patch("httpx.AsyncClient", return_value=mock_client):
+        with patch("deepalpha.infrastructure.providers.etfdb.scraper.httpx.AsyncClient", return_value=mock_client):
             with patch("asyncio.sleep", AsyncMock()):
                 candidates = await scrape_concept_etf_candidates(delay=0.0)
 
-        assert len(candidates) == 3  # 3 个主题的 ETF
+        assert len(candidates) == 9  # 3 个主题，每个主题 3 个 ETF
 
 
 # =============================================================================
