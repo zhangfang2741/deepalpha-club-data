@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -26,7 +28,9 @@ class ConceptPipelineConfig(BaseSettings):
 
     def asyncpg_dsn(self) -> str:
         ssl_param = "?sslmode=require" if self.postgres_ssl else ""
+        user = quote(self.postgres_user, safe="")
+        password = quote(self.postgres_password, safe="")
         return (
-            f"postgresql://{self.postgres_user}:{self.postgres_password}"
+            f"postgresql://{user}:{password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}{ssl_param}"
         )

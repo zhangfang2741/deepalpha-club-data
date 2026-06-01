@@ -1,10 +1,6 @@
-import pytest
-from pytest_httpx import HTTPXMock
-
 from deepalpha.pipeline.concept.etfdb_scraper import (
-    ConceptEtfCandidate,
-    _parse_theme_slugs,
     _parse_etf_symbols,
+    _parse_theme_slugs,
 )
 
 # 模拟 ETFdb 主题页 HTML
