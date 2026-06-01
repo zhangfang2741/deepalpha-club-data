@@ -8,4 +8,4 @@ class FinnhubConfig(BaseSettings):
     timeout: float = Field(30.0, title="超时时间（秒）")
     rate_limit_interval: float = Field(1.1, title="请求最小间隔（秒）", description="免费版 60次/分钟")
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="FINNHUB_", env_file=".env", extra="ignore")
