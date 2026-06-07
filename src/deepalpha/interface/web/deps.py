@@ -33,6 +33,7 @@ from deepalpha.infrastructure.providers.fmp.loaders.market_loader import FMPMark
 from deepalpha.infrastructure.providers.fmp.loaders.news_loader import FMPNewsLoader
 from deepalpha.infrastructure.providers.fmp.loaders.performance_loader import FMPMarketPerformanceLoader
 from deepalpha.infrastructure.config import ConceptPipelineConfig
+from deepalpha.core.logging import setup_logging
 
 
 @lru_cache(maxsize=1)
@@ -48,6 +49,7 @@ _cache: ConceptCache | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     global _services, _pool, _cache
+    setup_logging()
     cfg = get_config()
 
     _pool = await asyncpg.create_pool(cfg.asyncpg_dsn())
