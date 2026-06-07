@@ -68,10 +68,21 @@ async def translate_to_article_zh(
                 },
             )
             resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"].strip()
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            # 去掉 Markdown 代码块标记
+            content = _strip_markdown(content)
+            return content
     except Exception as exc:
         logger.warning("MiniMax 文章翻译失败 [%s]: %s", title, exc)
         return _fallback(title, description)
+
+
+def _strip_markdown(text: str) -> str:
+    """去掉 Markdown 代码块标记，返回纯文本。"""
+    import re
+    text = re.sub(r'^```[a-z]*\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\s*```$', '', text, flags=re.MULTILINE)
+    return text.strip()
 
 
 def _fallback(title: str, description: str | None) -> str:

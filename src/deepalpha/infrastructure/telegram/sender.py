@@ -39,6 +39,9 @@ class TelegramSender:
             成功时返回 Telegram message_id；干运行或失败时返回 None
         """
         text = _format_message(post)
+        if not text.strip():
+            logger.warning("消息内容为空，跳过发送 [%s]", post.title)
+            return None
 
         if self._dry_run:
             logger.info("[DRY-RUN] Telegram 消息预览:\n%s", text)
