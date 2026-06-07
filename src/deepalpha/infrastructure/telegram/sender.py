@@ -54,7 +54,6 @@ class TelegramSender:
                     json={
                         "chat_id": self._channel_id,
                         "text": text[:_MAX_MESSAGE_LEN],
-                        "parse_mode": "HTML",
                         "disable_web_page_preview": True,
                     },
                 )
@@ -71,20 +70,24 @@ class TelegramSender:
 
 
 def _format_message(post: CreatorPost) -> str:
-    """将创作者帖子格式化为 Telegram HTML 文章消息。"""
-    pub_date = post.published_at.strftime("%Y-%m-%d")
-    # 文章正文超长时截断（预留 header + footer 约 150 字符）
-    article = _esc(post.content_zh)
-    max_article_len = _MAX_MESSAGE_LEN - 200
+    """将创作者帖子格式化为 Telegram 纯文本消息。"""
+    pub_date = post.published_at.strftime("%Y-%m-%d %H:%M")
+    
+    # 纯文本消息，不使用 HTML 格式，避免转义问题
+    # 标题
+    header = f"📺 {post.title}\n"
+    header += f"📁 {post.channel_name} | {pub_date}\n"
+    header += "─" * 40 + "\n\n"
+    
+    # 正文超长时截断（预留 header + footer 约 100 字符）
+    article = post.content
+    max_article_len = _MAX_MESSAGE_LEN - len(header) - 50
     if len(article) > max_article_len:
-        article = article[:max_article_len] + "…"
-
-    return (
-        f"<b>{_esc(post.title)}</b>\n"
-        f"<i>{_esc(post.channel_name)} · {pub_date}</i>\n\n"
-        f"{article}\n\n"
-        f'<a href="{post.url}">▶ 原视频</a>'
-    )
+        article = article[:max_article_len] + "\n\n…（内容过长已截断）"
+    
+    footer = f"\n🔗 https://youtu.be/{post.video_id}"
+    
+    return header + article + footer
 
 
 def _esc(text: str) -> str:
