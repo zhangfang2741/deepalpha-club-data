@@ -1,0 +1,22 @@
+# YouTube 创作者监控频道列表
+#
+# 如何获取 channel_id：
+#   1. 打开频道主页，URL 形如 https://www.youtube.com/@ChannelName
+#   2. 右键查看源码，搜索 "channelId"，值为 UC... 格式
+#   3. 或使用 https://commentpicker.com/youtube-channel-id.php 在线查询
+#
+# enabled: false 可临时停用单个频道，无需删除配置
+
+channels:
+  - channel_id: UCxxxxxxxxxxxxxxxxxxxxxx   # 替换为真实频道 ID
+    channel_name: "示例博主1"
+    enabled: false
+
+  - channel_id: UCyyyyyyyyyyyyyyyyyyyyyy   # 替换为真实频道 ID
+    channel_name: "示例博主2"
+    enabled: false
+
+# 示例：常见美股财经 YouTube 博主
+# - channel_id: UCrM7B7SL_g1edFOnmj-SDKg  # 示例：Andrei Jikh
+#   channel_name: "Andrei Jikh"
+#   enabled: true
