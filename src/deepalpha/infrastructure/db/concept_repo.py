@@ -11,6 +11,7 @@ from typing import Any
 
 import asyncpg
 
+from deepalpha.core.logging import log_call
 from deepalpha.domain.concept.models import ConceptEtfMap, ConceptStock, ConceptSummary
 
 _CREATE_TABLES_SQL = """
@@ -74,6 +75,7 @@ class ConceptRepo:
         if self._pool:
             await self._pool.close()
 
+    @log_call("db")
     async def replace_etf_map(self, records: list[ConceptEtfMap]) -> None:
         """全量替换 concept_etf_map：清空旧数据后重新写入。"""
         assert self._pool is not None
@@ -92,6 +94,7 @@ class ConceptRepo:
                           r.concept_name_zh, r.etf_name_zh, r.description_zh) for r in records],
                     )
 
+    @log_call("db")
     async def upsert_etf_map(self, records: list[ConceptEtfMap]) -> None:
         assert self._pool is not None
         async with self._pool.acquire() as conn:
@@ -108,6 +111,7 @@ class ConceptRepo:
                 [(r.concept, r.etf_symbol, r.etf_name, r.aum_million, r.etfdb_slug, r.updated_at) for r in records],
             )
 
+    @log_call("db")
     async def load_etf_map(self) -> list[ConceptEtfMap]:
         assert self._pool is not None
         async with self._pool.acquire() as conn:
@@ -131,6 +135,7 @@ class ConceptRepo:
             for r in rows
         ]
 
+    @log_call("db")
     async def get_etfs_by_concept(self, concept: str) -> list[ConceptEtfMap]:
         """获取某概念下所有 ETF（含中文翻译）。"""
         assert self._pool is not None
@@ -157,6 +162,7 @@ class ConceptRepo:
             for r in rows
         ]
 
+    @log_call("db")
     async def upsert_stocks(self, date: datetime.date, records: list[ConceptStock]) -> None:
         """将概念成分股批量写入数据库。
 
@@ -179,6 +185,7 @@ class ConceptRepo:
                 [(date, r.concept, r.symbol, r.name, r.etf_count, r.total_weight, ",".join(r.etfs)) for r in records],
             )
 
+    @log_call("db")
     async def get_latest_stocks(self, concept: str) -> list[ConceptStock]:
         assert self._pool is not None
         async with self._pool.acquire() as conn:
@@ -194,6 +201,7 @@ class ConceptRepo:
             )
         return [_row_to_stock(r) for r in rows]
 
+    @log_call("db")
     async def get_all_summaries(self) -> list[ConceptSummary]:
         """获取所有概念的摘要信息（对齐 IConceptRepo 协议，原名 get_all_concept_summaries）。"""
         assert self._pool is not None
@@ -235,6 +243,7 @@ class ConceptRepo:
             for concept, data in concept_data.items()
         ]
 
+    @log_call("db")
     async def get_stocks_history(
         self, concept: str, start: datetime.date, end: datetime.date
     ) -> list[ConceptStock]:
