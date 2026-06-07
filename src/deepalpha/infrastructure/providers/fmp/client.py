@@ -7,6 +7,7 @@ from deepalpha.core.logging import log_call
 from deepalpha.infrastructure.providers.fmp.config import FMPConfig
 from deepalpha.infrastructure.providers.fmp.errors import (
     FMPAuthError,
+    FMPError,
     FMPNotFoundError,
     FMPRateLimitError,
     FMPServerError,
@@ -22,7 +23,7 @@ class FMPAsyncClient:
             limits=httpx.Limits(max_connections=config.max_connections),
         )
 
-    @log_call("fmp")
+    @log_call("fmp", passthrough=(FMPError,))
     async def get(self, path: str, **params: Any) -> Any:
         params["apikey"] = self._config.api_key
         delay = 1.0

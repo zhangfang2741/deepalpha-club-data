@@ -78,7 +78,12 @@ async def test_load_etf_map_parses_rows():
     mock_conn = AsyncMock()
     mock_conn.execute = AsyncMock()
     mock_conn.fetch = AsyncMock(return_value=[
-        {"concept": "AI", "etf_symbol": "BOTZ", "etf_name": "Global X", "aum_million": 2500.0, "etfdb_slug": "ai-etfs", "updated_at": datetime.date(2026, 5, 1)},
+        {
+            "concept": "AI", "etf_symbol": "BOTZ", "etf_name": "Global X",
+            "aum_million": 2500.0, "etfdb_slug": "ai-etfs",
+            "updated_at": datetime.date(2026, 5, 1),
+            "concept_name_zh": None, "etf_name_zh": None, "description_zh": None,
+        },
     ])
     mock_pool = _make_mock_pool(mock_conn)
 

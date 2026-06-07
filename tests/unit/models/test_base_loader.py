@@ -1,6 +1,7 @@
 import pytest
 from pydantic import BaseModel, Field
 
+from deepalpha.core.logging.exceptions import DeepAlphaInfraError
 from deepalpha.infrastructure.providers.base import BaseLoader
 
 
@@ -32,8 +33,10 @@ async def test_get_unwraps_list():
 async def test_get_raises_on_empty():
     client = FakeClient([])
     loader = ConcreteLoader(client)
-    with pytest.raises(ValueError, match="Empty response"):
+    with pytest.raises(DeepAlphaInfraError) as exc_info:
         await loader._get("/test")
+    assert isinstance(exc_info.value.original, ValueError)
+    assert "Empty response" in str(exc_info.value.original)
 
 
 @pytest.mark.asyncio

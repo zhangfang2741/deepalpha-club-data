@@ -18,12 +18,15 @@ class FMPEconomicsLoader(BaseLoader):
         end: datetime.date | None = None,
         interval: Interval = Interval.ONE_MONTH,
     ) -> list[IndicatorRow]:
+        from deepalpha.core.logging.exceptions import DeepAlphaInfraError
         from deepalpha.infrastructure.providers.fmp.errors import FMPNotFoundError
         try:
             records = await self._get_list(
                 "/stable/economics-indicators", name=indicator_name.upper()
             )
-        except FMPNotFoundError:
+        except (FMPNotFoundError, DeepAlphaInfraError) as exc:
+            if isinstance(exc, DeepAlphaInfraError) and not isinstance(exc.original, FMPNotFoundError):
+                raise
             return []
         models = self._to_models(records, IndicatorRow)
         # IndicatorRow.date 是 datetime.datetime，需转换 date 参数后比较

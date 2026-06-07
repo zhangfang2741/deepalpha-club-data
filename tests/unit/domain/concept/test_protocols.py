@@ -10,6 +10,7 @@ class _MockRepo:
     async def get_latest_stocks(self, concept: str) -> list[ConceptStock]: return []
     async def upsert_stocks(self, date: datetime.date, records: list[ConceptStock]) -> None: pass
     async def get_all_summaries(self) -> list[ConceptSummary]: return []
+    async def get_etfs_by_concept(self, concept: str) -> list[ConceptEtfMap]: return []
 
 
 class _MockCache:

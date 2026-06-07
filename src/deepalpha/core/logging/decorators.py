@@ -48,11 +48,17 @@ def _extract_call_args(func: Callable, args: tuple[Any, ...], kwargs: dict[str, 
     return _sanitize(call_args)
 
 
-def log_call(provider: str) -> Callable:
+def log_call(
+    provider: str,
+    passthrough: tuple[type[Exception], ...] = (),
+) -> Callable:
     """装饰器工厂，为 infrastructure 方法添加结构化日志和统一异常包装。
 
     Args:
         provider: 来源标识，如 "fmp"、"finnhub"、"cache"、"db"、"base"
+        passthrough: 允许穿透的异常类型元组，这些异常会记录 WARNING 日志后直接重抛，
+                     不包装为 DeepAlphaInfraError。适用于已具备语义的领域异常，
+                     如 FMPError 系列（FMPAuthError、FMPNotFoundError 等）。
 
     Returns:
         装饰器，支持 async 和 sync 函数
@@ -88,6 +94,16 @@ def log_call(provider: str) -> Callable:
                     return result
                 except DeepAlphaInfraError:
                     # 已包装过，直接重抛，不重复包装
+                    raise
+                except passthrough as exc:  # type: ignore[misc]
+                    elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+                    logger.warning(
+                        f"{method} 领域异常",
+                        method=method,
+                        exc_type=type(exc).__name__,
+                        exc_msg=str(exc),
+                        elapsed_ms=elapsed_ms,
+                    )
                     raise
                 except Exception as exc:
                     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
@@ -128,6 +144,16 @@ def log_call(provider: str) -> Callable:
                         )
                     return result
                 except DeepAlphaInfraError:
+                    raise
+                except passthrough as exc:  # type: ignore[misc]
+                    elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+                    logger.warning(
+                        f"{method} 领域异常",
+                        method=method,
+                        exc_type=type(exc).__name__,
+                        exc_msg=str(exc),
+                        elapsed_ms=elapsed_ms,
+                    )
                     raise
                 except Exception as exc:
                     elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
