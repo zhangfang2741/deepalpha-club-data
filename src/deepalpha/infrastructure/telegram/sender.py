@@ -52,7 +52,7 @@ class TelegramSender:
                         "chat_id": self._channel_id,
                         "text": text[:_MAX_MESSAGE_LEN],
                         "parse_mode": "HTML",
-                        "disable_web_page_preview": False,
+                        "disable_web_page_preview": True,
                     },
                 )
                 resp.raise_for_status()
@@ -68,13 +68,19 @@ class TelegramSender:
 
 
 def _format_message(post: CreatorPost) -> str:
-    """将创作者帖子格式化为 Telegram HTML 消息。"""
-    pub_time = post.published_at.strftime("%Y-%m-%d %H:%M UTC")
+    """将创作者帖子格式化为 Telegram HTML 文章消息。"""
+    pub_date = post.published_at.strftime("%Y-%m-%d")
+    # 文章正文超长时截断（预留 header + footer 约 150 字符）
+    article = _esc(post.content_zh)
+    max_article_len = _MAX_MESSAGE_LEN - 200
+    if len(article) > max_article_len:
+        article = article[:max_article_len] + "…"
+
     return (
-        f"📺 <b>{_esc(post.channel_name)}</b> 发布新视频\n\n"
-        f"<b>{_esc(post.title)}</b>\n\n"
-        f"{_esc(post.summary_zh)}\n\n"
-        f'🔗 <a href="{post.url}">观看视频</a>　⏰ {pub_time}'
+        f"<b>{_esc(post.title)}</b>\n"
+        f"<i>{_esc(post.channel_name)} · {pub_date}</i>\n\n"
+        f"{article}\n\n"
+        f'<a href="{post.url}">▶ 原视频</a>'
     )
 
 

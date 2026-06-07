@@ -101,7 +101,7 @@ class TestFormatMessage:
             title="Test Video",
             url="https://www.youtube.com/watch?v=abc123def45",
             published_at=datetime.datetime(2024, 1, 15, 10, 0, 0, tzinfo=datetime.timezone.utc),
-            summary_zh="这是一段测试中文摘要。",
+            content_zh="这是一段测试中文摘要。",
         )
         defaults.update(kwargs)
         return CreatorPost(**defaults)
@@ -114,7 +114,7 @@ class TestFormatMessage:
         msg = _format_message(self._make_post())
         assert "Test Video" in msg
 
-    def test_contains_summary(self) -> None:
+    def test_contains_article_content(self) -> None:
         msg = _format_message(self._make_post())
         assert "这是一段测试中文摘要" in msg
 

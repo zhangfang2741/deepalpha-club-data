@@ -29,12 +29,12 @@ class YouTubeVideo(BaseModel):
 
 
 class CreatorPost(BaseModel):
-    """已处理的创作者帖子（含 AI 中文摘要，准备推送）"""
+    """已处理的创作者帖子（含 AI 翻译的中文文章，准备推送）"""
     video_id: str = Field(title="视频 ID")
     channel_id: str = Field(title="频道 ID")
     channel_name: str = Field(title="频道名称")
     title: str = Field(title="视频标题")
     url: str = Field(title="视频链接")
     published_at: datetime.datetime = Field(title="发布时间（UTC）")
-    summary_zh: str = Field(title="AI 生成中文摘要")
+    content_zh: str = Field(title="AI 翻译的中文文章正文")
     thumbnail_url: str | None = Field(None, title="缩略图链接")

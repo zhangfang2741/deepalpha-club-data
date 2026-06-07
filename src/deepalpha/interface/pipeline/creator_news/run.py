@@ -20,7 +20,7 @@ import yaml
 from deepalpha.domain.creator.models import ChannelConfig, YouTubeVideo
 from deepalpha.infrastructure.config import CreatorNewsPipelineConfig
 from deepalpha.infrastructure.db.creator_repo import CreatorRepo
-from deepalpha.infrastructure.providers.minimax.summarizer import summarize_video_zh
+from deepalpha.infrastructure.providers.minimax.summarizer import translate_to_article_zh
 from deepalpha.infrastructure.providers.youtube.feed_loader import (
     fetch_channel_videos,
     get_transcript,
@@ -65,7 +65,7 @@ async def process_video(
     else:
         logger.debug("无字幕，使用标题+描述生成摘要")
 
-    summary_zh = await summarize_video_zh(
+    content_zh = await translate_to_article_zh(
         api_key=minimax_api_key,
         title=video.title,
         transcript=transcript,
@@ -79,7 +79,7 @@ async def process_video(
         title=video.title,
         url=video.url,
         published_at=video.published_at,
-        summary_zh=summary_zh,
+        content_zh=content_zh,
         thumbnail_url=video.thumbnail_url,
     )
 
