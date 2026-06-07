@@ -8,15 +8,6 @@
 # enabled: false 可临时停用单个频道，无需删除配置
 
 channels:
-  - channel_id: UCxxxxxxxxxxxxxxxxxxxxxx   # 替换为真实频道 ID
-    channel_name: "示例博主1"
-    enabled: false
-
-  - channel_id: UCyyyyyyyyyyyyyyyyyyyyyy   # 替换为真实频道 ID
-    channel_name: "示例博主2"
-    enabled: false
-
-# 示例：常见美股财经 YouTube 博主
-# - channel_id: UCrM7B7SL_g1edFOnmj-SDKg  # 示例：Andrei Jikh
-#   channel_name: "Andrei Jikh"
-#   enabled: true
+  - channel_id: UCjuvy7VvwUGPtTnbpfYY1QQ
+    channel_name: "catstocktrading"
+    enabled: true
