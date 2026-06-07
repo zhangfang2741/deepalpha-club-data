@@ -1,0 +1,13 @@
+# YouTube 创作者监控频道列表
+#
+# 如何获取 channel_id：
+#   1. 打开频道主页，URL 形如 https://www.youtube.com/@ChannelName
+#   2. 右键查看源码，搜索 "channelId"，值为 UC... 格式
+#   3. 或使用 https://commentpicker.com/youtube-channel-id.php 在线查询
+#
+# enabled: false 可临时停用单个频道，无需删除配置
+
+channels:
+  - channel_id: UCjuvy7VvwUGPtTnbpfYY1QQ
+    channel_name: "catstocktrading"
+    enabled: true
