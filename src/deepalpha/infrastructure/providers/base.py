@@ -5,6 +5,8 @@ from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 import polars as pl
 from pydantic import BaseModel
 
+from deepalpha.core.logging import log_call
+
 M = TypeVar("M", bound=BaseModel)
 
 
@@ -47,6 +49,7 @@ class BaseLoader(ABC):  # noqa: B024
         """
         self._client = client
 
+    @log_call("base")
     async def _get(self, endpoint: str, **params: Any) -> dict[str, Any]:
         """获取单个记录。
 
@@ -72,6 +75,7 @@ class BaseLoader(ABC):  # noqa: B024
             raise ValueError(f"Empty response for: {endpoint}")
         return cast(dict[str, Any], result)
 
+    @log_call("base")
     async def _get_list(self, endpoint: str, **params: Any) -> list[dict[str, Any]]:
         """获取记录列表。
 
@@ -92,6 +96,7 @@ class BaseLoader(ABC):  # noqa: B024
             return result
         return [result]
 
+    @log_call("base")
     def _to_models(
         self, records: list[dict[str, Any]], model: type[M]
     ) -> list[M]:
