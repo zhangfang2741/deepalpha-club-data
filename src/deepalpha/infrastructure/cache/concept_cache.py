@@ -12,6 +12,7 @@ import json
 
 import valkey.asyncio as valkey_asyncio
 
+from deepalpha.core.logging import log_call
 from deepalpha.domain.concept.models import ConceptStock, ConceptSummary
 
 
@@ -27,22 +28,26 @@ class ConceptCache:
         )
         self._ttl = ttl
 
+    @log_call("cache")
     async def get_concept(self, name: str) -> list[ConceptStock] | None:
         data = await self._client.get(f"concept:{name}")
         if data is None:
             return None
         return [ConceptStock.model_validate(item) for item in json.loads(data)]
 
+    @log_call("cache")
     async def set_concept(self, name: str, stocks: list[ConceptStock]) -> None:
         payload = json.dumps([s.model_dump(mode="json") for s in stocks])
         await self._client.set(f"concept:{name}", payload, ex=self._ttl)
 
+    @log_call("cache")
     async def get_list(self) -> list[ConceptSummary] | None:
         data = await self._client.get("concept:__list__")
         if data is None:
             return None
         return [ConceptSummary.model_validate(item) for item in json.loads(data)]
 
+    @log_call("cache")
     async def set_list(self, summaries: list[ConceptSummary]) -> None:
         payload = json.dumps([s.model_dump(mode="json") for s in summaries])
         await self._client.set("concept:__list__", payload, ex=self._ttl)
