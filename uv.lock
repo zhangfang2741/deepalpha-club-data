@@ -646,6 +646,7 @@ dependencies = [
     { name = "sse-starlette" },
     { name = "structlog" },
     { name = "valkey" },
+    { name = "whispercpp" },
     { name = "yfinance" },
     { name = "youtube-transcript-api" },
 ]
@@ -688,6 +689,7 @@ requires-dist = [
     { name = "sse-starlette", specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.0.0" },
     { name = "valkey", specifier = ">=6.0.0" },
+    { name = "whispercpp", specifier = ">=0.0.17" },
     { name = "yfinance" },
     { name = "youtube-transcript-api", specifier = ">=0.6.0" },
 ]
@@ -4141,6 +4143,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a5/8f/aea9c71cc92bf9b6cc0f7f70df8f0b420636b6c96ef4feee1e16f80f75dd/websockets-16.0-pp311-pypy311_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:0298d07ee155e2e9fda5be8a9042200dd2e3bb0b8a38482156576f863a9d457c", size = 176968, upload-time = "2026-01-10T09:23:41.031Z" },
     { url = "https://files.pythonhosted.org/packages/9a/3f/f70e03f40ffc9a30d817eef7da1be72ee4956ba8d7255c399a01b135902a/websockets-16.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:a653aea902e0324b52f1613332ddf50b00c06fdaf7e92624fbf8c77c78fa5767", size = 178735, upload-time = "2026-01-10T09:23:42.259Z" },
     { url = "https://files.pythonhosted.org/packages/6f/28/258ebab549c2bf3e64d2b0217b973467394a9cea8c42f70418ca2c5d0d2e/websockets-16.0-py3-none-any.whl", hash = "sha256:1637db62fad1dc833276dded54215f2c7fa46912301a24bd94d45d46a011ceec", size = 171598, upload-time = "2026-01-10T09:23:45.395Z" },
+]
+
+[[package]]
+name = "whispercpp"
+version = "0.0.17"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/9b/690f807441baa32e5165ddadb31a6716549c71d2f91eb62e74dda394dffd/whispercpp-0.0.17.tar.gz", hash = "sha256:174a2c82e0ee7bcc4c21301633df86d7de49395d81d9455a9bedfb0c790813de", size = 3993701, upload-time = "2023-03-22T03:33:24.056Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/39/f5c52bb2c61a7a399e06821da0e71d2c14e924f1efc8503b1cb2e469ab7a/whispercpp-0.0.17-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:70053d9e789e270931ebd1c69a2d17504f87cec29c27187bb92f16af965a9644", size = 1328998, upload-time = "2023-03-22T03:19:40.653Z" },
+    { url = "https://files.pythonhosted.org/packages/49/96/557e160fc49d1c242f9423b614b5f2d1122146adc569cf068360193db5ce/whispercpp-0.0.17-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:91c2ceded37a4c0cb19e0f971126c2cd57d307a90cf2099ab5ec272033bcd12c", size = 1415407, upload-time = "2023-03-22T03:11:06.383Z" },
+    { url = "https://files.pythonhosted.org/packages/69/11/4aea56130fe2291e727d6a35e28aac27b6c8361dc087b645e162b614ecd9/whispercpp-0.0.17-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:23c766b3d59026874f1e2de53c7003c26c020b1a515bdef6ea70fae5319e1baf", size = 1329845, upload-time = "2023-03-22T03:21:28.701Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/42/ad80b416d2be6a500a10de8868855957de266b0906f8da23a37fa35277cb/whispercpp-0.0.17-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:2f1709e0ce7eb7cd61d9b0ae3adfde725325efced0fe08f7aa98eaf4d3d57a7f", size = 1480981, upload-time = "2023-03-22T03:10:11.501Z" },
 ]
 
 [[package]]

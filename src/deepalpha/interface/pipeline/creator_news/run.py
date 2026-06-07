@@ -7,7 +7,7 @@ YouTube 创作者新闻流 Pipeline
   1. 读取 youtube_channels.yaml 获取启用的频道列表
   2. 每个频道拉取 RSS Feed（最近 15 个视频）
   3. 过滤已处理的视频（PostgreSQL 去重）
-  4. 对新视频：提取字幕 → MiniMax 中文摘要 → 推送 Telegram → 记录 DB
+  4. 对新视频：提取字幕 → 直接发送原文到 Telegram → 记录完整内容到 DB
 """
 
 import asyncio
@@ -20,7 +20,6 @@ import yaml
 from deepalpha.domain.creator.models import ChannelConfig, YouTubeVideo
 from deepalpha.infrastructure.config import CreatorNewsPipelineConfig
 from deepalpha.infrastructure.db.creator_repo import CreatorRepo
-from deepalpha.infrastructure.providers.minimax.summarizer import translate_to_article_zh
 from deepalpha.infrastructure.providers.youtube.feed_loader import (
     fetch_channel_videos,
     get_transcript,
@@ -55,22 +54,27 @@ async def process_video(
     repo: CreatorRepo,
     sender: TelegramSender,
     minimax_api_key: str,
+    youtube_cookies_file: str = "",
+    groq_api_key: str = "",
 ) -> None:
-    """处理单个新视频：摘要 → 发送 → 记录。"""
+    """处理单个新视频：提取字幕 → 直接发送原文到 Telegram → 记录完整内容到 DB。"""
     logger.info("处理新视频: [%s] %s", video.channel_name, video.title)
 
-    transcript = await get_transcript(video.video_id)
-    if transcript:
-        logger.debug("获取到字幕，长度: %d 字符", len(transcript))
-    else:
-        logger.debug("无字幕，使用标题+描述生成摘要")
-
-    content_zh = await translate_to_article_zh(
-        api_key=minimax_api_key,
-        title=video.title,
-        transcript=transcript,
-        description=video.description,
+    # 优先获取字幕轨道，回退 Groq Whisper 转录，最后用描述
+    transcript = await get_transcript(
+        video.video_id,
+        cookies_file=youtube_cookies_file,
+        groq_api_key=groq_api_key,
     )
+    if transcript:
+        logger.info("✓ 获取到字幕 [%s], 长度: %d 字符", video.video_id, len(transcript))
+        raw_content = transcript
+    elif video.description:
+        logger.warning("⚠ 无字幕，使用视频描述 [%s], 描述长度: %d", video.video_id, len(video.description) if video.description else 0)
+        raw_content = video.description or ""
+    else:
+        logger.error("✗ 视频无字幕也无描述: %s", video.video_id)
+        raw_content = ""
 
     post = CreatorPost(
         video_id=video.video_id,
@@ -79,7 +83,7 @@ async def process_video(
         title=video.title,
         url=video.url,
         published_at=video.published_at,
-        content_zh=content_zh,
+        content=raw_content,
         thumbnail_url=video.thumbnail_url,
     )
 
@@ -87,7 +91,17 @@ async def process_video(
 
     # 无论发送成功与否，只要消息内容已生成就记录（避免 Telegram 限速时无限重试）
     # 若 message_id 为 None 且是干运行模式，正常记录；若是真实发送失败，也记录防止刷屏
-    await repo.mark_processed(video.video_id, video.channel_id, message_id)
+    await repo.mark_processed(
+        video_id=video.video_id,
+        channel_id=video.channel_id,
+        message_id=message_id,
+        channel_name=video.channel_name,
+        title=video.title,
+        url=video.url,
+        published_at=video.published_at,
+        content=raw_content,
+        thumbnail_url=video.thumbnail_url,
+    )
 
 
 async def main(config: CreatorNewsPipelineConfig | None = None) -> None:
@@ -121,7 +135,11 @@ async def main(config: CreatorNewsPipelineConfig | None = None) -> None:
                     if await repo.is_processed(video.video_id):
                         continue
                     try:
-                        await process_video(video, repo, sender, config.minimax_api_key)
+                        await process_video(
+                            video, repo, sender, config.minimax_api_key,
+                            youtube_cookies_file=config.youtube_cookies_file,
+                            groq_api_key=config.groq_api_key,
+                        )
                         new_count += 1
                         # 避免 Telegram 限速（每秒最多 1 条推送）
                         await asyncio.sleep(1.5)

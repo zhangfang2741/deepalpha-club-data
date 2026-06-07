@@ -99,34 +99,141 @@ def _parse_feed(xml_text: str, channel: ChannelConfig) -> list[YouTubeVideo]:
     return videos
 
 
-async def get_transcript(video_id: str) -> str | None:
-    """提取视频字幕文本（优先英文，其次任意语言）。
+async def transcribe_via_groq(
+    video_id: str,
+    groq_api_key: str,
+    cookies_file: str = "",
+) -> str | None:
+    """用 yt-dlp 下载 MP3 音频，再通过 Groq Whisper API 转录。
 
-    youtube-transcript-api 是同步库，通过 asyncio.to_thread 调用。
-    无字幕时返回 None。
+    Groq 免费额度充裕，速度极快（21 分钟视频约 30 秒）。
+    依赖：系统安装 yt-dlp。
     """
-    def _fetch() -> str | None:
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        mp3_path = Path(tmpdir) / f"{video_id}.mp3"
+
+        # yt-dlp 下载音频为 MP3（64kbps，21 分钟 ≈ 10MB，远低于 Groq 25MB 限制）
+        dl_cmd = [
+            "yt-dlp",
+            "--extract-audio",
+            "--audio-format", "mp3",
+            "--audio-quality", "5",   # ~64kbps，Whisper 识别够用
+            "--output", str(mp3_path),
+            "--no-playlist",
+            "--quiet",
+        ]
+        if cookies_file and Path(cookies_file).exists():
+            dl_cmd += ["--cookies", cookies_file]
+        dl_cmd.append(f"https://www.youtube.com/watch?v={video_id}")
+
+        logger.info("开始下载音频 [%s]", video_id)
         try:
-            from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore[import-untyped]
-            from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound  # type: ignore[import-untyped]
-
-            try:
-                segments = YouTubeTranscriptApi.get_transcript(
-                    video_id, languages=["en", "en-US", "en-GB", "zh-Hans", "zh-Hant", "zh"]
-                )
-            except (NoTranscriptFound, Exception):
-                # 回退：获取任意可用语言
-                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-                transcript = transcript_list.find_transcript(["en"])
-                segments = transcript.fetch()
-
-            return " ".join(seg["text"] for seg in segments if seg.get("text"))
-        except Exception as exc:
-            logger.debug("视频 %s 无可用字幕: %s", video_id, exc)
+            r = subprocess.run(dl_cmd, capture_output=True, text=True, timeout=300)
+            if r.returncode != 0:
+                logger.warning("yt-dlp 下载失败 [%s]: %s", video_id, r.stderr[:300])
+                return None
+        except subprocess.TimeoutExpired:
+            logger.warning("yt-dlp 下载超时 [%s]", video_id)
             return None
 
-    try:
-        return await asyncio.to_thread(_fetch)
-    except Exception as exc:
-        logger.debug("字幕提取线程异常 %s: %s", video_id, exc)
-        return None
+        if not mp3_path.exists():
+            logger.warning("音频文件未生成 [%s]", video_id)
+            return None
+
+        size_mb = mp3_path.stat().st_size / 1024 / 1024
+        logger.info("音频就绪 [%s] %.1fMB，发送至 Groq Whisper 转录", video_id, size_mb)
+
+        if size_mb > 24:
+            logger.warning("音频超过 25MB 限制 [%s] %.1fMB，跳过转录", video_id, size_mb)
+            return None
+
+        try:
+            from openai import OpenAI
+            client = OpenAI(
+                api_key=groq_api_key,
+                base_url="https://api.groq.com/openai/v1",
+            )
+            with mp3_path.open("rb") as f:
+                transcription = client.audio.transcriptions.create(
+                    model="whisper-large-v3-turbo",
+                    file=f,
+                    response_format="text",
+                )
+            text = str(transcription).strip()
+            logger.info("Groq 转录完成 [%s] %d 字符", video_id, len(text))
+            return text or None
+        except Exception as exc:
+            logger.warning("Groq 转录失败 [%s]: %s", video_id, exc)
+            return None
+
+
+async def get_transcript(
+    video_id: str,
+    cookies_file: str = "",
+    groq_api_key: str = "",
+) -> str | None:
+    """提取视频文字内容，按以下优先级：
+    1. youtube-transcript-api 字幕轨道（快，无需下载）
+    2. yt-dlp + Groq Whisper API 音频转录（用于烧录字幕或无字幕轨道的视频）
+
+    cookies_file: Netscape 格式 cookies.txt，用于访问需登录的字幕。
+    groq_api_key: 有值时才启用 Groq 转录回退。
+    """
+    def _fetch_subtitle() -> str | None:
+        try:
+            from http.cookiejar import MozillaCookieJar
+            from requests import Session
+            from youtube_transcript_api import YouTubeTranscriptApi  # type: ignore[import-untyped]
+            from youtube_transcript_api._errors import NoTranscriptFound, TranscriptsDisabled  # type: ignore[import-untyped]
+
+            http_client: Session | None = None
+            if cookies_file:
+                from pathlib import Path
+                if Path(cookies_file).exists():
+                    jar = MozillaCookieJar(cookies_file)
+                    jar.load(ignore_discard=True, ignore_expires=True)
+                    session = Session()
+                    session.cookies = jar  # type: ignore[assignment]
+                    http_client = session
+                else:
+                    logger.warning("cookies 文件不存在: %s", cookies_file)
+
+            api = YouTubeTranscriptApi(http_client=http_client)
+            transcript_list = api.list(video_id)
+
+            for langs in [["en", "en-US", "en-GB"], ["zh-Hans", "zh-Hant", "zh"]]:
+                try:
+                    fetched = transcript_list.find_transcript(langs).fetch()
+                    text = " ".join(seg.text for seg in fetched if seg.text)
+                    logger.info("字幕轨道获取成功 [%s] 语言=%s, 段落数=%d", video_id, langs[0], len(fetched))
+                    return text
+                except NoTranscriptFound:
+                    continue
+
+            try:
+                fetched = transcript_list.find_generated_transcript(["en"]).fetch()
+                text = " ".join(seg.text for seg in fetched if seg.text)
+                logger.info("自动字幕获取成功 [%s], 段落数=%d", video_id, len(fetched))
+                return text
+            except NoTranscriptFound:
+                return None
+
+        except Exception:
+            return None
+
+    # 优先尝试字幕轨道（快，无需下载）
+    subtitle = await asyncio.to_thread(_fetch_subtitle)
+    if subtitle:
+        return subtitle
+
+    # 回退：Groq Whisper 音频转录
+    if groq_api_key:
+        logger.info("字幕轨道不可用 [%s]，尝试 Groq Whisper 音频转录", video_id)
+        return await transcribe_via_groq(video_id, groq_api_key, cookies_file)
+
+    logger.warning("视频 %s 无字幕轨道，且未配置 GROQ_API_KEY，跳过转录", video_id)
+    return None

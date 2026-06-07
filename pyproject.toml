@@ -26,6 +26,7 @@ dependencies = [
     "sse-starlette>=2.0",
     "structlog>=24.0.0",
     "youtube-transcript-api>=0.6.0",
+    "whispercpp>=0.0.17",
 ]
 
 [project.optional-dependencies]

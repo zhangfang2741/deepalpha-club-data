@@ -61,6 +61,43 @@ class CreatorNewsPipelineConfig(BaseSettings):
     youtube_channels_yaml: str = Field(
         "config/youtube_channels.yaml", title="YouTube 频道配置文件路径"
     )
+    youtube_cookies_file: str = Field(
+        "", title="YouTube cookies.txt 路径（Netscape 格式，用于访问需登录的字幕）"
+    )
+    groq_api_key: str = Field(
+        "", title="Groq API Key（用于 Whisper 音频转录，免费，速度极快）"
+    )
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    def asyncpg_dsn(self) -> str:
+        ssl_param = "?sslmode=require" if self.postgres_ssl else ""
+        user = quote(self.postgres_user, safe="")
+        password = quote(self.postgres_password, safe="")
+        return (
+            f"postgresql://{user}:{password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}{ssl_param}"
+        )
+
+
+class SignalRadarPipelineConfig(BaseSettings):
+    """信号趋势雷达 pipeline 全局配置，从环境变量读取。"""
+
+    postgres_host: str = Field(title="PostgreSQL 主机")
+    postgres_port: int = Field(5432, title="PostgreSQL 端口")
+    postgres_db: str = Field(title="数据库名")
+    postgres_user: str = Field(title="数据库用户名")
+    postgres_password: str = Field(title="数据库密码")
+    postgres_ssl: bool = Field(False, title="是否启用 SSL")
+
+    minimax_api_key: str = Field("", title="MiniMax API Key")
+
+    qqq_tickers_yaml: str = Field("config/qqq_tickers.yaml", title="QQQ 成分股配置路径")
+    greenhouse_slugs_yaml: str = Field("config/greenhouse_slugs.yaml", title="Greenhouse slug 配置路径")
+
+    edgar_lookback_days: int = Field(2, title="EDGAR 拉取最近 N 天")
+    momentum_window_days: int = Field(7, title="动量计算窗口（天）")
+    momentum_cap: float = Field(3.0, title="动量系数上限")
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

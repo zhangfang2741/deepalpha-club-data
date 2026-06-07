@@ -1,0 +1,40 @@
+# 支持 Greenhouse 或 Lever 公开 API 的 QQQ 公司
+# type: greenhouse → GET https://boards.greenhouse.io/embed/job_board/jobs.json?for={slug}
+# type: lever      → GET https://api.lever.co/v0/postings/{slug}?mode=json
+companies:
+  - ticker: NVDA
+    slug: nvidia
+    type: greenhouse
+  - ticker: META
+    slug: meta
+    type: greenhouse
+  - ticker: GOOGL
+    slug: google
+    type: greenhouse
+  - ticker: MSFT
+    slug: microsoft
+    type: greenhouse
+  - ticker: ADBE
+    slug: adobe
+    type: greenhouse
+  - ticker: CRWD
+    slug: crowdstrike
+    type: greenhouse
+  - ticker: PANW
+    slug: paloaltonetworks
+    type: greenhouse
+  - ticker: DDOG
+    slug: datadoghq
+    type: greenhouse
+  - ticker: ZS
+    slug: zscaler
+    type: greenhouse
+  - ticker: WDAY
+    slug: workday
+    type: greenhouse
+  - ticker: TEAM
+    slug: atlassian
+    type: greenhouse
+  - ticker: FTNT
+    slug: fortinet
+    type: greenhouse
