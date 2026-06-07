@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 
+from deepalpha.core.logging import log_call
 from deepalpha.infrastructure.providers.finnhub.config import FinnhubConfig
 
 
@@ -18,6 +19,7 @@ class FinnhubClient:
         )
         self._last_request_at: float = 0.0
 
+    @log_call("finnhub")
     async def _get(self, path: str, **params: Any) -> Any:
         elapsed = time.monotonic() - self._last_request_at
         if elapsed < self._config.rate_limit_interval:
