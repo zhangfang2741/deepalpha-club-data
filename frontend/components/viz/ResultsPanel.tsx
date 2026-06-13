@@ -17,15 +17,15 @@ function BubbleChart({ stocks }: { stocks: ConceptStock[] }) {
     z: Math.sqrt(s.total_weight) * 8,
   }))
 
-  const COLORS = ['#22d3ee', '#34d399', '#fbbf24', '#818cf8', '#fb7185', '#60a5fa', '#f97316', '#e879f9']
+  const COLORS = ['#1677FF', '#00D2FF', '#00C882', '#FFB900', '#409CFF', '#FF5A64', '#60a5fa', '#f97316']
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'rgb(72,90,130)' }}>
+        <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'rgb(100,115,140)' }}>
           成分股分布图
         </p>
-        <p className="text-[9px]" style={{ color: 'rgb(42,55,80)' }}>
+        <p className="text-[9px]" style={{ color: 'rgb(150,160,180)' }}>
           X = ETF覆盖数 · Y = 合计权重% · 圆大=权重高
         </p>
       </div>
@@ -36,22 +36,22 @@ function BubbleChart({ stocks }: { stocks: ConceptStock[] }) {
             type="number"
             dataKey="x"
             name="ETF覆盖"
-            tick={{ fontSize: 9, fill: 'rgb(72,90,130)', fontFamily: 'var(--font-ibm-mono)' }}
+            tick={{ fontSize: 9, fill: 'rgb(150,160,180)', fontFamily: 'var(--font-ibm-mono)' }}
             tickLine={false}
             axisLine={false}
-            label={{ value: 'ETF覆盖', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'rgb(42,55,80)' }}
+            label={{ value: 'ETF覆盖', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'rgb(150,160,180)' }}
           />
           <YAxis
             type="number"
             dataKey="y"
             name="权重"
-            tick={{ fontSize: 9, fill: 'rgb(72,90,130)', fontFamily: 'var(--font-ibm-mono)' }}
+            tick={{ fontSize: 9, fill: 'rgb(150,160,180)', fontFamily: 'var(--font-ibm-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={v => `${v}%`}
           />
           <Tooltip
-            cursor={{ strokeDasharray: '3 3', stroke: 'rgba(34,211,238,0.2)' }}
+            cursor={{ strokeDasharray: '3 3', stroke: 'rgba(22,119,255,0.2)' }}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null
               const d = payload[0].payload
@@ -59,23 +59,24 @@ function BubbleChart({ stocks }: { stocks: ConceptStock[] }) {
                 <div
                   className="px-3 py-2 rounded-lg text-[10px]"
                   style={{
-                    background: 'rgb(8,14,30)',
-                    border: '1px solid rgba(34,211,238,0.25)',
+                    background: 'rgb(255,255,255)',
+                    border: '1px solid rgba(22,119,255,0.20)',
                     fontFamily: 'var(--font-ibm-mono)',
-                    color: 'rgb(180,200,240)',
+                    color: 'rgb(60,70,90)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
                   }}
                 >
-                  <p style={{ color: 'rgb(34,211,238)' }} className="font-semibold">{d.name}</p>
+                  <p style={{ color: 'rgb(22,119,255)' }} className="font-semibold">{d.name}</p>
                   <p>ETF覆盖: {d.x}</p>
                   <p>权重: {d.y}%</p>
                 </div>
               )
             }}
           />
-          <ReferenceLine y={0} stroke="rgba(99,130,190,0.1)" />
+          <ReferenceLine y={0} stroke="rgba(0,0,0,0.06)" />
           <Scatter data={data} shape="circle">
             {data.map((d, i) => (
-              <Cell key={d.name} fill={COLORS[i % COLORS.length]} fillOpacity={0.7} />
+              <Cell key={d.name} fill={COLORS[i % COLORS.length]} fillOpacity={0.8} />
             ))}
           </Scatter>
         </ScatterChart>
@@ -88,18 +89,18 @@ function BubbleChart({ stocks }: { stocks: ConceptStock[] }) {
             key={s.symbol}
             className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px]"
             style={{
-              background: 'rgba(18,30,60,0.8)',
-              border: '1px solid rgba(99,130,190,0.12)',
+              background: 'rgb(245,247,250)',
+              border: '1px solid rgba(0,0,0,0.08)',
             }}
           >
             <span
               className="h-1.5 w-1.5 rounded-full shrink-0"
               style={{ background: COLORS[i % COLORS.length] }}
             />
-            <span style={{ fontFamily: 'var(--font-ibm-mono)', color: 'rgb(160,180,220)' }}>
+            <span style={{ fontFamily: 'var(--font-ibm-mono)', color: 'rgb(60,70,90)' }}>
               {s.symbol}
             </span>
-            <span style={{ color: 'rgb(72,90,130)' }}>{s.total_weight.toFixed(1)}%</span>
+            <span style={{ color: 'rgb(150,160,180)' }}>{s.total_weight.toFixed(1)}%</span>
           </div>
         ))}
       </div>
@@ -116,15 +117,15 @@ function FinancialBars({ output, symbol }: { output: string; symbol: string }) {
   }
 
   const items = [
-    { key: '营业收入', label: 'Revenue',   color: '#22d3ee' },
-    { key: '毛利润',   label: 'Gross',     color: '#34d399' },
-    { key: '营业利润', label: 'Operating', color: '#818cf8' },
-    { key: '净利润',   label: 'Net',       color: '#fbbf24' },
-    { key: 'EBITDA',  label: 'EBITDA',    color: '#fb7185' },
+    { key: '营业收入', label: 'Revenue',   color: '#1677FF' },
+    { key: '毛利润',   label: 'Gross',     color: '#00D2FF' },
+    { key: '营业利润', label: 'Operating', color: '#409CFF' },
+    { key: '净利润',   label: 'Net',       color: '#FFB900' },
+    { key: 'EBITDA',  label: 'EBITDA',    color: '#FF5A64' },
   ].map(i => ({ ...i, value: parse(i.key) })).filter(i => i.value !== null)
 
   if (!items.length) {
-    return <p className="text-xs" style={{ color: 'rgb(72,90,130)' }}>{output}</p>
+    return <p className="text-xs" style={{ color: 'rgb(100,115,140)' }}>{output}</p>
   }
 
   const max = Math.max(...items.map(i => i.value!))
@@ -133,7 +134,7 @@ function FinancialBars({ output, symbol }: { output: string; symbol: string }) {
     <div className="space-y-3">
       <p
         className="text-[10px] uppercase tracking-widest font-semibold"
-        style={{ color: 'rgb(72,90,130)' }}
+        style={{ color: 'rgb(100,115,140)' }}
       >
         {symbol} 财务摘要（单位：B）
       </p>
@@ -141,7 +142,7 @@ function FinancialBars({ output, symbol }: { output: string; symbol: string }) {
         {items.map(item => (
           <div key={item.key} className="space-y-1">
             <div className="flex justify-between text-[10px]">
-              <span style={{ color: 'rgb(120,140,180)', fontFamily: 'var(--font-figtree)' }}>
+              <span style={{ color: 'rgb(100,115,140)', fontFamily: 'var(--font-figtree)' }}>
                 {item.key}
               </span>
               <span style={{ color: item.color, fontFamily: 'var(--font-ibm-mono)' }}>
@@ -150,7 +151,7 @@ function FinancialBars({ output, symbol }: { output: string; symbol: string }) {
             </div>
             <div
               className="h-1.5 rounded-full"
-              style={{ background: 'rgba(18,30,60,0.8)', width: '100%' }}
+              style={{ background: 'rgb(240,244,248)', width: '100%' }}
             >
               <div
                 className="h-full rounded-full transition-all duration-700"
@@ -177,24 +178,25 @@ function QuoteDisplay({ symbol, output }: { symbol: string; output: string }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'rgb(72,90,130)' }}>
+      <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'rgb(100,115,140)' }}>
         实时报价
       </p>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: '最新价', value: price ? `$${price}` : '—', color: 'rgb(225,235,255)', big: true },
-          { label: '涨跌幅', value: pct ?? '—', color: isUp ? 'rgb(52,211,153)' : 'rgb(251,113,133)', big: true },
-          { label: '市值',   value: cap ?? '—', color: 'rgb(251,191,36)', big: false },
+          { label: '最新价', value: price ? `$${price}` : '—', color: 'rgb(30,38,55)', big: true },
+          { label: '涨跌幅', value: pct ?? '—', color: isUp ? 'rgb(0,180,100)' : 'rgb(255,80,90)', big: true },
+          { label: '市值',   value: cap ?? '—', color: 'rgb(255,185,0)', big: false },
         ].map(item => (
           <div
             key={item.label}
             className="px-3 py-2.5 rounded-lg"
             style={{
-              background: 'rgba(13,22,46,0.8)',
-              border: '1px solid rgba(99,130,190,0.10)',
+              background: 'rgb(255,255,255)',
+              border: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
             }}
           >
-            <p className="text-[9px] mb-1" style={{ color: 'rgb(72,90,130)' }}>{item.label}</p>
+            <p className="text-[9px] mb-1" style={{ color: 'rgb(150,160,180)' }}>{item.label}</p>
             <p
               className="font-semibold tabular-nums"
               style={{
@@ -216,22 +218,22 @@ function QuoteDisplay({ symbol, output }: { symbol: string; output: string }) {
 function WelcomeScreen() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-5 py-8">
-      <div className="grid grid-cols-3 gap-2 opacity-30">
+      <div className="grid grid-cols-3 gap-2 opacity-40">
         {['📊', '📉', '💹', '📈', '🔍', '💡'].map((e, i) => (
           <div
             key={i}
             className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
-            style={{ background: 'rgba(18,30,60,0.6)', border: '1px solid rgba(99,130,190,0.1)' }}
+            style={{ background: 'rgb(240,244,248)', border: '1px solid rgba(22,119,255,0.1)' }}
           >
             {e}
           </div>
         ))}
       </div>
       <div className="text-center space-y-1.5">
-        <p className="text-sm font-semibold" style={{ color: 'rgb(100,120,160)', fontFamily: 'var(--font-bricolage)' }}>
+        <p className="text-sm font-semibold" style={{ color: 'rgb(100,115,140)', fontFamily: 'var(--font-bricolage)' }}>
           结果将在此可视化
         </p>
-        <p className="text-xs max-w-[220px]" style={{ color: 'rgb(52,70,100)' }}>
+        <p className="text-xs max-w-[220px]" style={{ color: 'rgb(150,160,180)' }}>
           查询股票报价、概念成分股、财务数据时，
           结果将自动渲染为图表或表格
         </p>
@@ -261,8 +263,8 @@ export function ResultsPanel() {
       )}
 
       {result?.kind === 'concepts' && (
-        <div className="text-xs" style={{ color: 'rgb(120,140,180)' }}>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: 'rgb(72,90,130)' }}>
+        <div className="text-xs" style={{ color: 'rgb(100,115,140)' }}>
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: 'rgb(100,115,140)' }}>
             可用概念分类
           </p>
           <p className="whitespace-pre-wrap leading-relaxed" style={{ fontFamily: 'var(--font-figtree)' }}>

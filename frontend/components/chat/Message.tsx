@@ -18,16 +18,18 @@ export function Message({ message }: { message: UIMessage }) {
               style={
                 isUser
                   ? {
-                      background: 'rgba(34,211,238,0.12)',
-                      border: '1px solid rgba(34,211,238,0.2)',
-                      color: 'rgb(200,230,255)',
+                      background: 'linear-gradient(135deg, rgba(22,119,255,0.12), rgba(0,180,255,0.08))',
+                      border: '1px solid rgba(22,119,255,0.20)',
+                      color: 'rgb(22,119,255)',
                       borderBottomRightRadius: 4,
+                      boxShadow: '0 2px 8px rgba(22,119,255,0.08)',
                     }
                   : {
-                      background: 'rgba(18,30,60,0.9)',
-                      border: '1px solid rgba(99,130,190,0.15)',
-                      color: 'rgb(180,200,240)',
+                      background: 'rgb(255,255,255)',
+                      border: '1px solid rgba(22,119,255,0.10)',
+                      color: 'rgb(60,70,90)',
                       borderBottomLeftRadius: 4,
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                     }
               }
             >
@@ -35,25 +37,26 @@ export function Message({ message }: { message: UIMessage }) {
                 <span style={{ fontFamily: 'var(--font-figtree)' }}>{part.text}</span>
               ) : (
                 <div
-                  className="prose prose-invert prose-xs max-w-none"
+                  className="prose prose-xs max-w-none"
                   style={{ fontFamily: 'var(--font-figtree)' }}
                 >
                   <ReactMarkdown
                     components={{
                       code: ({ children }) => (
                         <code
-                          className="px-1 py-0.5 rounded text-[10px]"
+                          className="px-1.5 py-0.5 rounded text-[10px]"
                           style={{
                             fontFamily: 'var(--font-ibm-mono)',
-                            background: 'rgba(34,211,238,0.1)',
-                            color: 'rgb(34,211,238)',
+                            background: 'rgba(22,119,255,0.08)',
+                            color: 'rgb(22,119,255)',
+                            border: '1px solid rgba(22,119,255,0.15)',
                           }}
                         >
                           {children}
                         </code>
                       ),
                       strong: ({ children }) => (
-                        <strong style={{ color: 'rgb(225,235,255)' }}>{children}</strong>
+                        <strong style={{ color: 'rgb(30,38,55)' }}>{children}</strong>
                       ),
                     }}
                   >

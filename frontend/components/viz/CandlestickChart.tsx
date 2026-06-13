@@ -111,14 +111,14 @@ export function CandlestickChart({
             <line
               x1={PAD.left} x2={w - PAD.right}
               y1={toY(level)} y2={toY(level)}
-              stroke="rgba(99,130,190,0.08)" strokeWidth={1}
+              stroke="rgba(0,0,0,0.06)" strokeWidth={1}
             />
             <text
               x={w - PAD.right + 6}
               y={toY(level)}
               dy="0.35em"
               fontSize={9}
-              fill="rgb(72,90,130)"
+              fill="rgb(150,160,180)"
               fontFamily="var(--font-ibm-mono)"
             >
               {level >= 1000 ? level.toLocaleString() : level.toFixed(level < 1 ? 4 : 2)}
@@ -136,14 +136,14 @@ export function CandlestickChart({
               <line
                 x1={PAD.left} x2={w - PAD.right}
                 y1={y} y2={y}
-                stroke={isUp ? 'rgba(52,211,153,0.3)' : 'rgba(251,113,133,0.3)'}
+                stroke={isUp ? 'rgba(0,200,130,0.3)' : 'rgba(255,90,100,0.3)'}
                 strokeWidth={1}
                 strokeDasharray="3 3"
               />
               <text
                 x={w - PAD.right + 6} y={y} dy="0.35em"
                 fontSize={9}
-                fill={isUp ? 'rgb(52,211,153)' : 'rgb(251,113,133)'}
+                fill={isUp ? 'rgb(0,200,130)' : 'rgb(255,90,100)'}
                 fontFamily="var(--font-ibm-mono)"
                 fontWeight={600}
               >
@@ -154,14 +154,14 @@ export function CandlestickChart({
         })()}
 
         {/* ── MA 线 ── */}
-        <path d={maPath(ma5)} fill="none" stroke="rgba(251,191,36,0.6)" strokeWidth={1.2} />
-        <path d={maPath(ma20)} fill="none" stroke="rgba(129,140,248,0.6)" strokeWidth={1.2} />
+        <path d={maPath(ma5)} fill="none" stroke="rgba(255,185,0,0.7)" strokeWidth={1.2} />
+        <path d={maPath(ma20)} fill="none" stroke="rgba(22,119,255,0.6)" strokeWidth={1.2} />
 
         {/* ── 蜡烛 ── */}
         {bars.map((b, i) => {
           const x = PAD.left + (i + 0.5) * spacing
           const isUp = b.c >= b.o
-          const color = isUp ? '#34d399' : '#fb7185'
+          const color = isUp ? '#00C882' : '#FF5A64'
           const bodyTop = toY(Math.max(b.o, b.c))
           const bodyBot = toY(Math.min(b.o, b.c))
           const bodyH = Math.max(1, bodyBot - bodyTop)
@@ -204,7 +204,7 @@ export function CandlestickChart({
               y={volY}
               width={candleW}
               height={Math.max(1, volBase - volY)}
-              fill={isUp ? 'rgba(52,211,153,0.35)' : 'rgba(251,113,133,0.25)'}
+              fill={isUp ? 'rgba(0,200,130,0.35)' : 'rgba(255,90,100,0.25)'}
             />
           )
         })}
@@ -221,7 +221,7 @@ export function CandlestickChart({
                 x={x} y={h - 8}
                 textAnchor="middle"
                 fontSize={9}
-                fill="rgb(72,90,130)"
+                fill="rgb(150,160,180)"
                 fontFamily="var(--font-ibm-mono)"
               >
                 {b.t.slice(5)}
@@ -236,22 +236,22 @@ export function CandlestickChart({
             <line
               x1={tooltip.x} x2={tooltip.x}
               y1={PAD.top} y2={PAD.top + priceH}
-              stroke="rgba(34,211,238,0.4)" strokeWidth={1} strokeDasharray="3 3"
+              stroke="rgba(22,119,255,0.4)" strokeWidth={1} strokeDasharray="3 3"
             />
             <line
               x1={PAD.left} x2={w - PAD.right}
               y1={toY(tooltip.bar.c)} y2={toY(tooltip.bar.c)}
-              stroke="rgba(34,211,238,0.25)" strokeWidth={1} strokeDasharray="3 3"
+              stroke="rgba(22,119,255,0.25)" strokeWidth={1} strokeDasharray="3 3"
             />
           </>
         )}
 
         {/* ── 图例 ── */}
         <g transform={`translate(${PAD.left + 8}, ${PAD.top + 6})`}>
-          <rect x={0} y={0} width={4} height={4} fill="rgba(251,191,36,0.7)" />
-          <text x={8} y={4} fontSize={8} fill="rgba(251,191,36,0.7)" fontFamily="var(--font-ibm-mono)">MA5</text>
-          <rect x={36} y={0} width={4} height={4} fill="rgba(129,140,248,0.7)" />
-          <text x={44} y={4} fontSize={8} fill="rgba(129,140,248,0.7)" fontFamily="var(--font-ibm-mono)">MA20</text>
+          <rect x={0} y={0} width={4} height={4} fill="rgba(255,185,0,0.8)" />
+          <text x={8} y={4} fontSize={8} fill="rgba(255,185,0,0.8)" fontFamily="var(--font-ibm-mono)">MA5</text>
+          <rect x={36} y={0} width={4} height={4} fill="rgba(22,119,255,0.7)" />
+          <text x={44} y={4} fontSize={8} fill="rgba(22,119,255,0.7)" fontFamily="var(--font-ibm-mono)">MA20</text>
         </g>
       </svg>
 
@@ -263,12 +263,13 @@ export function CandlestickChart({
             left: tooltip.x + 12,
             top: tooltip.y - 10,
             transform: tooltip.x > w * 0.65 ? 'translateX(-100%)' : undefined,
-            background: 'rgba(8,14,30,0.95)',
-            border: '1px solid rgba(34,211,238,0.25)',
+            background: 'rgb(255,255,255)',
+            border: '1px solid rgba(22,119,255,0.20)',
             fontFamily: 'var(--font-ibm-mono)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
           }}
         >
-          <p className="mb-1" style={{ color: 'rgb(140,160,200)' }}>{tooltip.bar.t}</p>
+          <p className="mb-1" style={{ color: 'rgb(100,115,140)' }}>{tooltip.bar.t}</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
             {[
               ['开', tooltip.bar.o],
@@ -277,14 +278,14 @@ export function CandlestickChart({
               ['收', tooltip.bar.c],
             ].map(([label, val]) => (
               <div key={label as string} className="flex justify-between gap-2">
-                <span style={{ color: 'rgb(72,90,130)' }}>{label}</span>
-                <span style={{ color: (val as number) >= tooltip.bar.o ? 'rgb(52,211,153)' : 'rgb(251,113,133)' }}>
+                <span style={{ color: 'rgb(150,160,180)' }}>{label}</span>
+                <span style={{ color: (val as number) >= tooltip.bar.o ? 'rgb(0,180,100)' : 'rgb(255,80,90)' }}>
                   {(val as number).toFixed((val as number) < 1 ? 4 : 2)}
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-1" style={{ color: 'rgb(72,90,130)' }}>
+          <p className="mt-1" style={{ color: 'rgb(150,160,180)' }}>
             量 {(tooltip.bar.v / 1e6).toFixed(1)}M
           </p>
         </div>

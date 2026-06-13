@@ -257,6 +257,43 @@ class SignalRadarRepo:
             )
         return [r["theme_name"] for r in rows]
 
+    async def get_latest_date(self) -> datetime.date:
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT MAX(score_date) AS latest FROM signal_theme_daily_scores"
+            )
+        return row["latest"] or datetime.date.today()
+
+    async def get_theme_signals(
+        self,
+        theme_name: str,
+        from_date: datetime.date,
+        to_date: datetime.date,
+        limit = 50,
+    ) -> list[dict]:
+        """返回某主题在某时间范围内的原始信号明细。"""
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT
+                    ri.ticker,
+                    ri.source_type,
+                    ri.signal_date,
+                    ri.doc_id,
+                    ri.text_snippet,
+                    et.confidence
+                FROM signal_extracted_themes et
+                JOIN signal_raw_items ri ON ri.id = et.raw_item_id
+                WHERE et.theme_name = $1
+                  AND ri.signal_date >= $2
+                  AND ri.signal_date <= $3
+                ORDER BY et.confidence DESC, ri.signal_date DESC
+                LIMIT $4
+                """,
+                theme_name, from_date, to_date, limit,
+            )
+        return [dict(r) for r in rows]
+
 
 def _row_to_score(row: asyncpg.Record) -> DailyThemeScore:
     bd = row["signal_breakdown"]

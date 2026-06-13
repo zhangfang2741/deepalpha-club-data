@@ -89,21 +89,22 @@ export function ChatPanel() {
       {/* ── 顶栏 ── */}
       <div
         className="flex items-center justify-between px-4 py-3 shrink-0"
-        style={{ borderBottom: '1px solid rgba(99,130,190,0.10)' }}
+        style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <div
-            className="h-6 w-6 rounded-md flex items-center justify-center text-[9px] font-bold"
+            className="h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold"
             style={{
-              background: 'linear-gradient(135deg, rgb(34,211,238), rgb(129,140,248))',
-              color: 'rgb(8,14,30)',
+              background: 'linear-gradient(135deg, rgb(22,119,255), rgb(0,210,255))',
+              color: 'white',
+              boxShadow: '0 2px 10px rgba(22,119,255,0.3)',
             }}
           >
             AI
           </div>
           <span
             className="text-xs font-semibold"
-            style={{ color: 'rgb(180,195,225)', fontFamily: 'var(--font-bricolage)' }}
+            style={{ color: 'rgb(15,23,42)', fontFamily: 'var(--font-bricolage)' }}
           >
             投研助手
           </span>
@@ -116,7 +117,7 @@ export function ChatPanel() {
                 key={i}
                 className="h-1 w-1 rounded-full"
                 style={{
-                  background: 'rgb(34,211,238)',
+                  background: 'rgb(22,119,255)',
                   animation: `pulse-dot 0.9s ease-in-out ${i * 0.15}s infinite`,
                 }}
               />
@@ -131,16 +132,16 @@ export function ChatPanel() {
           <div className="flex flex-col gap-3 pt-4">
             <div className="flex flex-col items-center gap-3 py-4">
               <div
-                className="h-14 w-14 rounded-2xl flex items-center justify-center text-2xl"
+                className="h-14 w-14 rounded-2xl flex items-center justify-center text-2xl animate-float"
                 style={{
-                  background: 'rgba(34,211,238,0.06)',
-                  border: '1px solid rgba(34,211,238,0.12)',
-                  filter: 'drop-shadow(0 0 12px rgba(34,211,238,0.15))',
+                  background: 'rgba(0,0,0,0.06)',
+                  border: '1px solid rgba(22,119,255,0.15)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
                 }}
               >
                 🔭
               </div>
-              <p className="text-xs text-center" style={{ color: 'rgb(100,120,160)' }}>
+              <p className="text-xs text-center" style={{ color: 'rgb(100,115,140)' }}>
                 询问股票行情、概念成分股、<br />财务数据等投研问题
               </p>
             </div>
@@ -151,24 +152,26 @@ export function ChatPanel() {
                 <button
                   key={q}
                   onClick={() => setInput(q)}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs transition-all duration-150"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs transition-all duration-200"
                   style={{
-                    background: 'rgba(13,22,46,0.8)',
-                    border: '1px solid rgba(99,130,190,0.10)',
-                    color: 'rgb(120,140,180)',
+                    background: 'rgb(245,247,250)',
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    color: 'rgb(100,115,140)',
                   }}
                   onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(34,211,238,0.2)'
-                    ;(e.currentTarget as HTMLButtonElement).style.color = 'rgb(180,200,240)'
-                    ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(18,30,60,0.9)'
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(22,119,255,0.3)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color = 'rgb(22,119,255)'
+                    ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(22,119,255,0.05)'
+                    ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateX(2px)'
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,130,190,0.10)'
-                    ;(e.currentTarget as HTMLButtonElement).style.color = 'rgb(120,140,180)'
-                    ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,22,46,0.8)'
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,0,0,0.08)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color = 'rgb(100,115,140)'
+                    ;(e.currentTarget as HTMLButtonElement).style.background = 'rgb(245,247,250)'
+                    ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateX(0)'
                   }}
                 >
-                  <span style={{ color: 'rgb(34,211,238)', marginRight: 6 }}>→</span>
+                  <span style={{ color: 'rgb(22,119,255)', marginRight: 6, fontWeight: 600 }}>→</span>
                   {q}
                 </button>
               ))}
@@ -185,17 +188,24 @@ export function ChatPanel() {
       {/* ── 输入框 ── */}
       <div
         className="shrink-0 p-3"
-        style={{ borderTop: '1px solid rgba(99,130,190,0.10)' }}
+        style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
       >
         <form onSubmit={handleSubmit}>
           <div
             className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-200"
             style={{
-              background: 'rgba(13,22,46,0.9)',
-              border: '1px solid rgba(99,130,190,0.15)',
+              background: 'rgb(255,255,255)',
+              border: '1px solid rgba(22,119,255,0.15)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
             }}
-            onFocusCapture={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(34,211,238,0.35)'}
-            onBlurCapture={e => (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(99,130,190,0.15)'}
+            onFocusCapture={e => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(22,119,255,0.4)'
+              ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(22,119,255,0.1), 0 0 0 3px rgba(0,0,0,0.06)'
+            }}
+            onBlurCapture={e => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(22,119,255,0.15)'
+              ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
+            }}
           >
             <input
               value={input}
@@ -204,22 +214,32 @@ export function ChatPanel() {
               disabled={isLoading}
               className="flex-1 bg-transparent text-xs outline-none placeholder:opacity-40 disabled:opacity-40"
               style={{
-                color: 'rgb(225,235,255)',
+                color: 'rgb(15,23,42)',
                 fontFamily: 'var(--font-figtree)',
               }}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="flex items-center justify-center h-6 w-6 rounded-lg transition-all duration-150 disabled:opacity-25"
+              className="flex items-center justify-center h-7 w-7 rounded-lg transition-all duration-150 disabled:opacity-30"
               style={{
-                background: 'rgba(34,211,238,0.2)',
-                color: 'rgb(34,211,238)',
-                border: '1px solid rgba(34,211,238,0.3)',
+                background: 'linear-gradient(135deg, rgb(22,119,255), rgb(0,180,255))',
+                color: 'white',
+                boxShadow: '0 2px 8px rgba(22,119,255,0.25)',
+              }}
+              onMouseEnter={e => {
+                if (input.trim() && !isLoading) {
+                  (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.05)'
+                  ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(22,119,255,0.35)'
+                }
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'
+                ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(22,119,255,0.25)'
               }}
             >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M1 9L9 1M9 1H3M9 1V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M1 11L11 1M11 1H4M11 1V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           </div>

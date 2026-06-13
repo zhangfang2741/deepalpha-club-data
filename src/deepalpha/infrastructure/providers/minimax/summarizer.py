@@ -56,7 +56,7 @@ async def translate_to_article_zh(
     )
 
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=60.0, trust_env=False) as client:
             resp = await client.post(
                 _API_URL,
                 headers={"Authorization": f"Bearer {api_key}"},

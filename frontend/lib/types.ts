@@ -65,3 +65,15 @@ export interface OHLCVBar {
   c: number
   v: number
 }
+
+export interface DailyThemeScore {
+  theme_name: string
+  category: 'tech_concept' | 'infra_component' | 'engineering_concept'
+  score_date: string
+  base_score: number
+  momentum: number
+  final_score: number
+  cumulative_score: number
+  company_count: number
+  signal_breakdown: Record<string, number>
+}

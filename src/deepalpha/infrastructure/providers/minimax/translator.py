@@ -17,7 +17,7 @@ _MODEL = "MiniMax-Text-01"
 
 
 async def _chat(api_key: str, prompt: str) -> str:
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=60.0, trust_env=False) as client:
         resp = await client.post(
             _API_URL,
             headers={"Authorization": f"Bearer {api_key}"},

@@ -23,6 +23,18 @@ async def list_concepts(
     return await svc.list_summaries()
 
 
+@router.get("/{name}/analysis")
+async def analyze_concept(
+    name: str,
+    svc: Annotated[ConceptService, Depends(_get_concept_svc)],
+) -> dict:
+    """
+    对概念板块进行多维度 AI 业务分析（核心产品、企业定位、
+    竞争格局、供应链关系、生态位），返回 5 个维度的 Markdown 表格。
+    """
+    return await svc.analyze_concept(name)
+
+
 @router.get("/{name}/etfs", response_model=list[ConceptEtfMap])
 async def get_concept_etfs(
     name: str,

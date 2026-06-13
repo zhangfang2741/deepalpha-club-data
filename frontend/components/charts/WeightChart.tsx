@@ -7,8 +7,8 @@ import {
 import type { ConceptStock } from '@/lib/types'
 
 const COLORS = [
-  '#fbbf24', '#22d3ee', '#34d399',
-  '#a78bfa', '#fb7185', '#60a5fa',
+  '#1677FF', '#00D2FF', '#00C882', '#FFB900',
+  '#409CFF', '#FF5A64', '#60a5fa',
   '#f97316', '#4ade80', '#e879f9',
   '#94a3b8', '#818cf8', '#2dd4bf',
   '#facc15', '#38bdf8', '#86efac',
@@ -24,7 +24,7 @@ export function WeightChart({ stocks, limit = 15 }: { stocks: ConceptStock[]; li
       <BarChart data={data} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 4 }}>
         <XAxis
           type="number"
-          tick={{ fontSize: 10, fill: 'rgb(72,90,130)', fontFamily: 'var(--font-ibm-mono)' }}
+          tick={{ fontSize: 10, fill: 'rgb(100,116,139)', fontFamily: 'var(--font-ibm-mono)' }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v: number) => `${v}%`}
@@ -33,7 +33,7 @@ export function WeightChart({ stocks, limit = 15 }: { stocks: ConceptStock[]; li
           type="category"
           dataKey="symbol"
           width={52}
-          tick={{ fontSize: 10, fill: 'rgb(34,211,238)', fontFamily: 'var(--font-ibm-mono)' }}
+          tick={{ fontSize: 10, fill: 'rgb(22,119,255)', fontFamily: 'var(--font-ibm-mono)' }}
           tickLine={false}
           axisLine={false}
         />
@@ -41,13 +41,13 @@ export function WeightChart({ stocks, limit = 15 }: { stocks: ConceptStock[]; li
           formatter={(v: unknown) => [`${v}%`, '合计权重']}
           contentStyle={{
             fontSize: 11,
-            background: 'rgb(13,22,46)',
-            border: '1px solid rgba(99,130,190,0.2)',
+            background: 'rgb(246,248,252)',
+            border: '1px solid rgba(22,119,255,0.2)',
             borderRadius: 6,
-            color: 'rgb(225,235,255)',
+            color: 'rgb(15,23,42)',
             fontFamily: 'var(--font-ibm-mono)',
           }}
-          cursor={{ fill: 'rgba(34,211,238,0.04)' }}
+          cursor={{ fill: 'rgba(0,0,0,0.04)' }}
         />
         <Bar dataKey="weight" radius={[0, 3, 3, 0]} maxBarSize={14}>
           {data.map((_, i) => (

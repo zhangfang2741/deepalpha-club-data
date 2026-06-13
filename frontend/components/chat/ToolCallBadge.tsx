@@ -21,31 +21,30 @@ export function ToolCallBadge({ toolName, state }: ToolCallBadgeProps) {
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium"
       style={{
         background: done
-          ? 'rgba(52,211,153,0.08)'
+          ? 'rgba(0,200,130,0.08)'
           : error
-            ? 'rgba(251,113,133,0.08)'
-            : 'rgba(251,191,36,0.08)',
+            ? 'rgba(255,90,100,0.08)'
+            : 'rgba(22,119,255,0.08)',
         border: `1px solid ${
           done
-            ? 'rgba(52,211,153,0.2)'
+            ? 'rgba(0,200,130,0.2)'
             : error
-              ? 'rgba(251,113,133,0.2)'
-              : 'rgba(251,191,36,0.2)'
+              ? 'rgba(255,90,100,0.2)'
+              : 'rgba(22,119,255,0.2)'
         }`,
         color: done
-          ? 'rgb(52,211,153)'
+          ? 'rgb(0,200,130)'
           : error
-            ? 'rgb(251,113,133)'
-            : 'rgb(251,191,36)',
+            ? 'rgb(255,90,100)'
+            : 'rgb(22,119,255)',
         fontFamily: 'var(--font-figtree)',
-        animation: busy ? undefined : undefined,
       }}
     >
       {busy && (
         <span
           className="h-1.5 w-1.5 rounded-full shrink-0"
           style={{
-            background: 'rgb(251,191,36)',
+            background: 'rgb(22,119,255)',
             animation: 'pulse-dot 1s ease-in-out infinite',
           }}
         />

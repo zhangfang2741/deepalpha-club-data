@@ -84,7 +84,7 @@ class FormDLoader:
                 ticker="__FORM_D__",
                 source_type="form_d",
                 signal_date=datetime.date.fromisoformat(file_date_str),
-                doc_id=acc,
+                doc_id=f"CIK{cik_int:010d}/{acc}/primary_doc.xml",
                 text_snippet=text[:2000],
             ))
 

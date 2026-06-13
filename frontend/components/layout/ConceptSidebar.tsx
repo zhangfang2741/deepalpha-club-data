@@ -15,7 +15,7 @@ export function ConceptSidebar() {
       <div className="px-4 pb-3">
         <p
           className="text-[10px] font-semibold tracking-[0.15em] uppercase"
-          style={{ color: 'rgb(72,90,130)' }}
+          style={{ color: 'rgb(100,116,139)' }}
         >
           投资主题
         </p>
@@ -48,20 +48,20 @@ export function ConceptSidebar() {
               href={href}
               className="flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all duration-150 group"
               style={{
-                background: active ? 'rgba(34,211,238,0.08)' : 'transparent',
+                background: active ? 'rgba(0,0,0,0.06)' : 'transparent',
                 borderLeft: active
-                  ? '2px solid rgb(34,211,238)'
+                  ? '2px solid rgb(22,119,255)'
                   : '2px solid transparent',
                 color: active
-                  ? 'rgb(34,211,238)'
-                  : 'rgb(140,160,200)',
+                  ? 'rgb(22,119,255)'
+                  : 'rgb(51,65,85)',
               }}
             >
               <span
                 className="truncate text-xs font-medium"
                 style={{
                   fontFamily: 'var(--font-figtree)',
-                  color: active ? 'rgb(34,211,238)' : undefined,
+                  color: active ? 'rgb(22,119,255)' : undefined,
                 }}
               >
                 {label}
@@ -72,7 +72,7 @@ export function ConceptSidebar() {
                   className="text-[9px] tabular-nums"
                   style={{
                     fontFamily: 'var(--font-ibm-mono)',
-                    color: active ? 'rgba(34,211,238,0.7)' : 'rgb(72,90,130)',
+                    color: active ? 'rgba(22,119,255,0.7)' : 'rgb(100,116,139)',
                   }}
                 >
                   {c.stock_count}
@@ -83,9 +83,9 @@ export function ConceptSidebar() {
                     width: dotSize,
                     height: dotSize,
                     background: active
-                      ? 'rgb(34,211,238)'
-                      : 'rgba(99,130,190,0.3)',
-                    boxShadow: active ? '0 0 6px rgba(34,211,238,0.5)' : undefined,
+                      ? 'rgb(22,119,255)'
+                      : 'rgba(22,119,255,0.2)',
+                    boxShadow: active ? '0 0 6px rgba(22,119,255,0.5)' : undefined,
                   }}
                 />
               </div>
@@ -95,8 +95,8 @@ export function ConceptSidebar() {
       </div>
 
       {/* 底部版权 */}
-      <div className="px-4 pt-3 border-t" style={{ borderColor: 'rgba(99,130,190,0.08)' }}>
-        <p className="text-[9px]" style={{ color: 'rgb(42,55,80)' }}>
+      <div className="px-4 pt-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.04)' }}>
+        <p className="text-[9px]" style={{ color: 'rgb(100,116,139)' }}>
           数据来源 Yahoo Finance · Morningstar
         </p>
       </div>

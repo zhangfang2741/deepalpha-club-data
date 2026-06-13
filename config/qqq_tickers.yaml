@@ -48,7 +48,7 @@ tickers:
   - BIIB
   - GEHC
   - MRNA
-  - ON
+  - "ON"
   - ODFL
   - ZS
   - TEAM

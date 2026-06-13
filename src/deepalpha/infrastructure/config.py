@@ -92,10 +92,10 @@ class SignalRadarPipelineConfig(BaseSettings):
 
     minimax_api_key: str = Field("", title="MiniMax API Key")
 
-    qqq_tickers_yaml: str = Field("config/qqq_tickers.yaml", title="QQQ 成分股配置路径")
+    qqq_tickers_yaml: str = Field("config/nasdaq100_tickers.yaml", title="Nasdaq100 成分股配置路径")
     greenhouse_slugs_yaml: str = Field("config/greenhouse_slugs.yaml", title="Greenhouse slug 配置路径")
 
-    edgar_lookback_days: int = Field(2, title="EDGAR 拉取最近 N 天")
+    edgar_lookback_days: int = Field(180, title="EDGAR 拉取最近 N 天")
     momentum_window_days: int = Field(7, title="动量计算窗口（天）")
     momentum_cap: float = Field(3.0, title="动量系数上限")
 

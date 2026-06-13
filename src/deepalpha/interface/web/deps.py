@@ -68,7 +68,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     fmp = FMPAsyncClient(fmp_cfg)
 
     _services = Services(
-        concept=ConceptService(repo, _cache),
+        concept=ConceptService(repo, _cache, minimax_api_key=cfg.minimax_api_key),
         market=MarketService(FMPMarketLoader(fmp)),
         financial=FinancialService(FMPFinancialLoader(fmp)),
         analyst=AnalystService(FMPAnalystLoader(fmp)),

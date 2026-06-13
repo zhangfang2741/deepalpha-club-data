@@ -49,7 +49,7 @@ class Filing8KLoader:
                 ticker=ticker,
                 source_type="earnings_call",
                 signal_date=filing_date,
-                doc_id=acc,
+                doc_id=f"CIK{int(cik10):010d}/{acc}/{doc}",
                 text_snippet=text[:2000],
             ))
         return items

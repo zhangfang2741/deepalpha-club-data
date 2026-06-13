@@ -7,8 +7,9 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
     <div
       className="rounded-lg overflow-hidden"
       style={{
-        background: 'rgba(13,22,46,0.6)',
-        border: '1px solid rgba(99,130,190,0.10)',
+        background: 'rgb(255,255,255)',
+        border: '1px solid rgba(22,119,255,0.10)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
       }}
     >
       {/* 表头 */}
@@ -16,9 +17,9 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
         className="grid text-[10px] font-semibold uppercase tracking-[0.12em] px-4 py-2.5"
         style={{
           gridTemplateColumns: '2rem 6rem 1fr 4rem 7rem',
-          color: 'rgb(72,90,130)',
-          borderBottom: '1px solid rgba(99,130,190,0.10)',
-          background: 'rgba(8,14,30,0.4)',
+          color: 'rgb(100,115,140)',
+          borderBottom: '1px solid rgba(22,119,255,0.08)',
+          background: 'rgb(245,247,250)',
         }}
       >
         <span>#</span>
@@ -38,7 +39,7 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
               className="grid items-center px-4 py-2.5 stock-row transition-colors duration-100"
               style={{
                 gridTemplateColumns: '2rem 6rem 1fr 4rem 7rem',
-                borderBottom: i < stocks.length - 1 ? '1px solid rgba(99,130,190,0.06)' : undefined,
+                borderBottom: i < stocks.length - 1 ? '1px solid rgba(22,119,255,0.04)' : undefined,
               }}
             >
               {/* 排名 */}
@@ -46,7 +47,7 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
                 className="text-[10px] tabular-nums"
                 style={{
                   fontFamily: 'var(--font-ibm-mono)',
-                  color: i < 3 ? 'rgb(251,191,36)' : 'rgb(42,55,80)',
+                  color: i < 3 ? 'rgb(255,185,0)' : 'rgb(150,160,180)',
                 }}
               >
                 {i + 1}
@@ -57,7 +58,7 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
                 className="text-sm font-semibold"
                 style={{
                   fontFamily: 'var(--font-ibm-mono)',
-                  color: 'rgb(34,211,238)',
+                  color: 'rgb(22,119,255)',
                 }}
               >
                 {s.symbol}
@@ -66,7 +67,7 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
               {/* 公司名 */}
               <span
                 className="text-xs truncate pr-4"
-                style={{ color: 'rgb(120,140,180)' }}
+                style={{ color: 'rgb(100,115,140)' }}
               >
                 {s.name ?? '—'}
               </span>
@@ -77,9 +78,9 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
                   className="text-xs tabular-nums px-1.5 py-0.5 rounded"
                   style={{
                     fontFamily: 'var(--font-ibm-mono)',
-                    background: 'rgba(34,211,238,0.08)',
-                    color: 'rgb(34,211,238)',
-                    border: '1px solid rgba(34,211,238,0.15)',
+                    background: 'rgba(22,119,255,0.08)',
+                    color: 'rgb(22,119,255)',
+                    border: '1px solid rgba(22,119,255,0.15)',
                   }}
                 >
                   {s.etf_count}
@@ -92,22 +93,22 @@ export function StockTable({ stocks }: { stocks: ConceptStock[] }) {
                   className="text-xs tabular-nums font-medium"
                   style={{
                     fontFamily: 'var(--font-ibm-mono)',
-                    color: 'rgb(251,191,36)',
+                    color: 'rgb(255,185,0)',
                   }}
                 >
                   {s.total_weight.toFixed(1)}%
                 </span>
                 <div
                   className="h-0.5 rounded-full"
-                  style={{ width: '3.5rem', background: 'rgba(99,130,190,0.15)' }}
+                  style={{ width: '3.5rem', background: 'rgb(240,244,248)' }}
                 >
                   <div
                     className="h-full rounded-full"
                     style={{
                       width: `${weightPct}%`,
                       background: weightPct > 70
-                        ? 'rgb(251,191,36)'
-                        : 'rgba(251,191,36,0.5)',
+                        ? 'rgb(255,185,0)'
+                        : 'rgba(255,185,0,0.5)',
                     }}
                   />
                 </div>

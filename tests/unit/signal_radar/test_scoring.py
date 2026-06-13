@@ -9,8 +9,8 @@ def _theme(name: str, cat: SignalCategory = SignalCategory.tech_concept, conf: f
     return ExtractedTheme(name=name, category=cat, confidence=conf)
 
 
-def _signal(name: str, source: str, ticker: str = "NVDA") -> ThemeSignal:
-    return ThemeSignal(theme=_theme(name), source_type=source, ticker=ticker)
+def _signal(name: str, source: str, ticker: str = "NVDA", signal_date: datetime.date = TODAY) -> ThemeSignal:
+    return ThemeSignal(theme=_theme(name), source_type=source, ticker=ticker, signal_date=signal_date)
 
 
 def test_base_score_uses_source_weights():
@@ -41,9 +41,9 @@ def test_cumulative_adds_to_previous():
 
 def test_company_count_tracks_unique_tickers():
     signals = [
-        ThemeSignal(theme=_theme("HBM3e"), source_type="capex", ticker="NVDA"),
-        ThemeSignal(theme=_theme("HBM3e"), source_type="capex", ticker="AMD"),
-        ThemeSignal(theme=_theme("HBM3e"), source_type="capex", ticker="NVDA"),  # 重复
+        ThemeSignal(theme=_theme("HBM3e"), source_type="capex", ticker="NVDA", signal_date=TODAY),
+        ThemeSignal(theme=_theme("HBM3e"), source_type="capex", ticker="AMD", signal_date=TODAY),
+        ThemeSignal(theme=_theme("HBM3e"), source_type="capex", ticker="NVDA", signal_date=TODAY),  # 重复
     ]
     scores = compute_daily_scores(signals, past_scores={}, prev_cumulative={}, today=TODAY)
     assert scores[0].company_count == 2

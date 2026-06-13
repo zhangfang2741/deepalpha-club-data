@@ -48,7 +48,12 @@ def compute_daily_scores(
     results: list[DailyThemeScore] = []
     for name, base_score in base.items():
         avg_past = past_scores.get(name, 0.0)
-        momentum = base_score / max(avg_past, 1.0)
+        if avg_past > 0:
+            # 有历史：真实动量
+            momentum = base_score / avg_past
+        else:
+            # 新主题首次出现：动量 = 1.0（无历史可比，视为基准）
+            momentum = 1.0
         momentum = min(momentum, momentum_cap)
         final = base_score * momentum
         cumulative = prev_cumulative.get(name, 0.0) + final

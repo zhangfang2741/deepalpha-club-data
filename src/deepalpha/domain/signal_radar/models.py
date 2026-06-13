@@ -31,6 +31,7 @@ class ThemeSignal(BaseModel):
     theme: ExtractedTheme = Field(title="提取的主题")
     source_type: str = Field(title="来源类型")
     ticker: str = Field(title="公司 ticker")
+    signal_date: datetime.date = Field(title="信号原始日期")
 
 
 class DailyThemeScore(BaseModel):
